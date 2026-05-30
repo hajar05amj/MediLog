@@ -1,0 +1,233 @@
+{% extends 'delivery/base.html' %}
+
+{% block title %}Dashboard - MediLog Courier{% endblock %}
+
+{% block page_title %}Tableau de bord{% endblock %}
+{% block page_subtitle %}Vos performances et missions en un coup d'œil.{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Left Column: Stats and Active Mission -->
+    <div class="lg:col-span-2 space-y-8">
+        <!-- Stats Row -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="glass-card rounded-2xl p-4">
+                <p class="text-xs text-slate-400 mb-1">Missions du jour</p>
+                <h3 class="text-2xl font-bold text-blue-400">{{ daily_deliveries }}</h3>
+                <div class="mt-2 flex items-center gap-1 text-[10px] text-green-400">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>+12% vs hier</span>
+                </div>
+            </div>
+            <div class="glass-card rounded-2xl p-4">
+                <p class="text-xs text-slate-400 mb-1">Revenus (MAD)</p>
+                <h3 class="text-2xl font-bold text-green-400">{{ total_earnings }}</h3>
+                <div class="mt-2 flex items-center gap-1 text-[10px] text-green-400">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>+5% vs hier</span>
+                </div>
+            </div>
+            <div class="glass-card rounded-2xl p-4">
+                <p class="text-xs text-slate-400 mb-1">Distance (km)</p>
+                <h3 class="text-2xl font-bold text-purple-400">42.5</h3>
+                <div class="mt-2 flex items-center gap-1 text-[10px] text-slate-500">
+                    <i class="fas fa-minus"></i>
+                    <span>Stable</span>
+                </div>
+            </div>
+            <div class="glass-card rounded-2xl p-4">
+                <p class="text-xs text-slate-400 mb-1">Score Patient</p>
+                <h3 class="text-2xl font-bold text-amber-400">4.9</h3>
+                <div class="mt-2 flex items-center gap-1 text-[10px] text-amber-400">
+                    <i class="fas fa-star text-[8px]"></i>
+                    <span>Elite Courier</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Mission Card -->
+        {% if active_deliveries %}
+            {% for delivery in active_deliveries %}
+            <div class="glass-card rounded-3xl p-6 border-l-4 border-blue-500 active-mission-pulse">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-blue-600/20 rounded-2xl flex items-center justify-center text-blue-400">
+                            <i class="fas fa-box-medical text-xl"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Mission en cours</span>
+                            <h4 class="text-lg font-bold">Livraison #{{ delivery.id }}</h4>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-slate-400">Estimé</p>
+                        <p class="font-bold text-blue-400">12 min</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="space-y-4">
+                        <div class="flex gap-4">
+                            <div class="flex flex-col items-center gap-1">
+                                <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                                <div class="w-0.5 h-10 bg-slate-700"></div>
+                                <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                            </div>
+                            <div class="space-y-4">
+                                <div>
+                                    <p class="text-[10px] text-slate-500 uppercase font-bold">Récupération</p>
+                                    <p class="text-sm font-medium">Laboratoire Central - Casa</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-slate-500 uppercase font-bold">Livraison</p>
+                                    <p class="text-sm font-medium">{{ delivery.reservation.address }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass-card rounded-2xl p-4 bg-slate-900/40">
+                        <p class="text-xs text-slate-400 mb-2">Détails Colis</p>
+                        <div class="flex items-center justify-between text-sm">
+                            <span>Type:</span>
+                            <span class="font-semibold text-blue-400">{{ delivery.reservation.service_name }}</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm mt-1">
+                            <span>Priorité:</span>
+                            <span class="text-red-400 font-bold">Haute</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <a href="{% url 'delivery:detail_livraison' delivery.id %}" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2">
+                        <i class="fas fa-navigation"></i>
+                        Gérer la livraison
+                    </a>
+                    <button class="w-14 h-14 glass-card rounded-xl flex items-center justify-center text-slate-300 hover:text-white">
+                        <i class="fas fa-phone"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="glass-card rounded-3xl p-12 text-center">
+                <div class="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-600">
+                    <i class="fas fa-box-open text-3xl"></i>
+                </div>
+                <h4 class="text-xl font-bold mb-2">Aucune mission active</h4>
+                <p class="text-slate-400 mb-6">Consultez les missions disponibles pour commencer à gagner.</p>
+                <a href="{% url 'delivery:livraisons' %}" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold transition-all">
+                    Voir les missions
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        {% endif %}
+
+        <!-- Activity Chart -->
+        <div class="glass-card rounded-3xl p-6">
+            <h4 class="text-lg font-bold mb-6">Activité de la semaine</h4>
+            <div class="h-64">
+                <canvas id="activityChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Map and Notifications -->
+    <div class="space-y-8">
+        <!-- Live Map Widget -->
+        <div class="glass-card rounded-3xl overflow-hidden">
+            <div class="p-4 border-b border-white/5 flex items-center justify-between">
+                <h4 class="font-bold">Live Tracking</h4>
+                <span class="flex items-center gap-1.5 text-[10px] text-green-400">
+                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                    En ligne
+                </span>
+            </div>
+            <div id="miniMap" class="h-64 bg-slate-800"></div>
+            <div class="p-4 bg-slate-900/60">
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-slate-400">Localisation actuelle</span>
+                    <span class="font-medium">Casablanca, Maarif</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Notifications -->
+        <div class="glass-card rounded-3xl p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h4 class="font-bold">Alertes</h4>
+                <a href="{% url 'delivery:notifications' %}" class="text-xs text-blue-400 hover:underline">Voir tout</a>
+            </div>
+            <div class="space-y-4">
+                {% for notif in recent_notifications %}
+                <div class="flex gap-3 p-3 rounded-2xl hover:bg-white/5 transition-colors group">
+                    <div class="w-10 h-10 rounded-xl bg-blue-600/10 flex items-center justify-center text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium">{{ notif.title }}</p>
+                        <p class="text-[10px] text-slate-500">{{ notif.created_at|timesince }} ago</p>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-center text-slate-500 text-sm py-4">Pas de nouvelles notifications</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Activity Chart
+    const ctx = document.getElementById('activityChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+            datasets: [{
+                label: 'Missions',
+                data: [5, 8, 12, 7, 15, 10, 4],
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 3,
+                pointRadius: 4,
+                pointBackgroundColor: '#3b82f6'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { display: false },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#64748b', font: { size: 10 } }
+                }
+            }
+        }
+    });
+
+    // Mini Map Initialization
+    const map = L.map('miniMap', {
+        zoomControl: false,
+        attributionControl: false
+    }).setView([33.5731, -7.5898], 13);
+    
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+    
+    // Custom Courier Icon
+    const courierIcon = L.divIcon({
+        className: 'custom-div-icon',
+        html: "<div style='background-color:#3b82f6; width:12px; height:12px; border-radius:50%; border:2px solid white; box-shadow:0 0 10px #3b82f6;' class='animate-pulse'></div>",
+        iconSize: [12, 12],
+        iconAnchor: [6, 6]
+    });
+    
+    L.marker([33.5731, -7.5898], {icon: courierIcon}).addTo(map);
+</script>
+{% endblock %}

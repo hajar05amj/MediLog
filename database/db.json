@@ -1,0 +1,53 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "patient",
+      "password": "123",
+      "role": "patient",
+      "name": "M. Ahmed (Patient)"
+    },
+    {
+      "id": 2,
+      "username": "medecin",
+      "password": "123",
+      "role": "medecin",
+      "name": "Dr. Bennani (Médecin)"
+    },
+    {
+      "id": 3,
+      "username": "livreur",
+      "password": "123",
+      "role": "livreur",
+      "name": "Karim (Coursier)"
+    }
+  ],
+  "doctors": [
+    {
+      "id": 2,
+      "name": "Dr. Bennani - Cardiologue"
+    },
+    {
+      "id": 101,
+      "name": "Dr. Tazi - Généraliste"
+    },
+    {
+      "id": 102,
+      "name": "Dr. Chraibi - Laboratoire Central"
+    }
+  ],
+  "services": [
+    {
+      "id": "transport_analyse",
+      "name": "Transport des analyses médicales"
+    },
+    {
+      "id": "reception_resultat",
+      "name": "Réception des résultats à domicile"
+    },
+    {
+      "id": "accompagnement",
+      "name": "Accompagnement physique chez le médecin"
+    }
+  ]
+}

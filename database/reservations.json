@@ -1,0 +1,15 @@
+[
+  {
+    "id": 1001,
+    "patientId": 1,
+    "medecinId": 2,
+    "medecinName": "Dr. Bennani - Cardiologue",
+    "service": "transport_analyse",
+    "serviceName": "Transport des analyses médicales",
+    "date": "2026-05-10",
+    "time": "10:00",
+    "address": "Quartier Hassan, Rabat",
+    "status": "attente",
+    "createdAt": "2026-05-05T23:00:00.000Z"
+  }
+]

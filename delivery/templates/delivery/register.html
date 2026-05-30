@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription Courier - MediLog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Outfit', sans-serif; background-color: #0f172a; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">
+        <div class="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px]"></div>
+        <div class="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-green-600/10 rounded-full blur-[120px]"></div>
+    </div>
+
+    <div class="w-full max-w-md">
+        <div class="text-center mb-10">
+            <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-blue-600/30">
+                <i class="fas fa-id-card text-white text-3xl"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-white tracking-tight">Rejoindre MediLog</h1>
+            <p class="text-slate-400 mt-2">Devenez un maillon essentiel de la santé</p>
+        </div>
+
+        <div class="glass rounded-3xl p-8 shadow-2xl">
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+                
+                {% if form.errors %}
+                <div class="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-xl text-xs mb-4">
+                    Veuillez corriger les erreurs ci-dessous.
+                </div>
+                {% endif %}
+
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Identifiants</label>
+                    <div class="space-y-3">
+                        <div class="relative">
+                            <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                            <input type="text" name="username" required class="w-full bg-slate-900/50 border border-white/5 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-blue-500 transition-all text-sm" placeholder="Nom d'utilisateur">
+                        </div>
+                        <div class="relative">
+                            <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                            <input type="password" name="password" required class="w-full bg-slate-900/50 border border-white/5 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-blue-500 transition-all text-sm" placeholder="Mot de passe">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2 pt-2">
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Profil Professionnel</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="relative">
+                            <i class="fas fa-motorcycle absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                            <select class="w-full bg-slate-900/50 border border-white/5 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-blue-500 transition-all text-sm appearance-none">
+                                <option>Moto</option>
+                                <option>Voiture</option>
+                                <option>Vélo</option>
+                            </select>
+                        </div>
+                        <div class="relative">
+                            <i class="fas fa-phone absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                            <input type="tel" placeholder="Téléphone" class="w-full bg-slate-900/50 border border-white/5 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-blue-500 transition-all text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-3 py-2">
+                    <input type="checkbox" required class="mt-1 w-4 h-4 rounded border-white/5 bg-slate-900/50 text-blue-600 focus:ring-blue-500">
+                    <label class="text-[10px] text-slate-400">J'accepte les conditions d'utilisation et la charte de confidentialité médicale de MediLog.</label>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 mt-4">
+                    Créer mon profil
+                    <i class="fas fa-check-circle text-xs"></i>
+                </button>
+            </form>
+
+            <div class="mt-8 pt-6 border-t border-white/5 text-center">
+                <p class="text-slate-400 text-sm">Déjà livreur ? 
+                    <a href="{% url 'delivery:login' %}" class="text-blue-400 font-bold hover:underline">Se connecter</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

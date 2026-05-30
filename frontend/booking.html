@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediLog - Réservation Sécurisée</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        medical: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        },
+                        accent: {
+                            500: '#10b981',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .step-inactive { @apply opacity-0 pointer-events-none absolute; }
+        .step-active { @apply opacity-100 pointer-events-auto relative transition-opacity duration-500; }
+        .form-input {
+            @apply w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-medical-100 focus:border-medical-600 transition-all outline-none text-slate-700 bg-slate-50;
+        }
+        .progress-dot { @apply w-3 h-3 rounded-full transition-all duration-500; }
+        .dot-active { @apply bg-medical-600 scale-125 ring-4 ring-medical-100; }
+        .dot-inactive { @apply bg-slate-200; }
+    </style>
+</head>
+<body class="font-sans text-slate-800 bg-slate-50 min-h-screen pb-20">
+
+    <!-- Header / Progress -->
+    <header class="bg-white border-b border-slate-100 sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-medical-600 rounded-lg flex items-center justify-center text-white text-sm">
+                    <i class="fa-solid fa-truck-medical"></i>
+                </div>
+                <span class="font-bold tracking-tight text-slate-900">MediLog</span>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div id="dot1" class="progress-dot dot-active"></div>
+                <div class="w-8 h-0.5 bg-slate-100"></div>
+                <div id="dot2" class="progress-dot dot-inactive"></div>
+                <div class="w-8 h-0.5 bg-slate-100"></div>
+                <div id="dot3" class="progress-dot dot-inactive"></div>
+            </div>
+
+            <a href="index.html" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></a>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-6 mt-12">
+        <div class="mb-8">
+            <h1 id="serviceTitle" class="text-3xl font-bold text-slate-900 mb-2">Finalisez votre demande</h1>
+            <p id="servicePrice" class="text-medical-600 font-bold"></p>
+        </div>
+
+        <form id="bookingForm" class="relative">
+            
+            <!-- STEP 1: Patient Info -->
+            <div id="step1" class="step-active space-y-8">
+                <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
+                    <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                        <span class="w-8 h-8 rounded-full bg-medical-100 text-medical-600 flex items-center justify-center text-sm">1</span>
+                        Informations Patient
+                    </h2>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="text-sm font-bold text-slate-600">Nom Complet</label>
+                            <input type="text" id="patientName" class="form-input" placeholder="Ahmed Bennani" required>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-bold text-slate-600">Téléphone</label>
+                            <input type="tel" id="patientPhone" class="form-input" placeholder="06 XX XX XX XX" required>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-bold text-slate-600">Email</label>
+                            <input type="email" id="patientEmail" class="form-input" placeholder="ahmed@example.com" required>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-bold text-slate-600">Âge</label>
+                            <input type="number" id="patientAge" class="form-input" placeholder="35" required>
+                        </div>
+                        <div class="md:col-span-2 space-y-2">
+                            <label class="text-sm font-bold text-slate-600">Adresse de collecte/livraison</label>
+                            <textarea id="patientAddress" rows="3" class="form-input" placeholder="Numéro, Rue, Quartier, Ville..." required></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button type="button" onclick="goToStep(2)" class="bg-medical-600 text-white px-10 py-4 rounded-xl font-bold hover:bg-medical-700 transition-all shadow-xl shadow-medical-600/20 flex items-center gap-2">
+                        Continuer
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 2: Medical Info -->
+            <div id="step2" class="step-inactive space-y-8">
+                <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
+                    <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                        <span class="w-8 h-8 rounded-full bg-medical-100 text-medical-600 flex items-center justify-center text-sm">2</span>
+                        Détails Médicaux
+                    </h2>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="text-sm font-bold text-slate-600">Laboratoire / Clinique</label>
+                            <select id="labSelect" class="form-input">
+                                <option>Laboratoire Central Casablanca</option>
+                                <option>Clinique Maadi</option>
+                                <option>Labo Anoual</option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-bold text-slate-600">Médecin traitant</label>
+                            <select id="docSelect" class="form-input">
+                                <option>Dr. Bennani (Généraliste)</option>
+                                <option>Dr. Alami (Cardiologue)</option>
+                                <option>Dr. Idrissi (Pédiatre)</option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-bold text-slate-600">Date souhaitée</label>
+                            <input type="date" id="reqDate" class="form-input" required>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-bold text-slate-600">Heure souhaitée</label>
+                            <input type="time" id="reqTime" class="form-input" required>
+                        </div>
+                        
+                        <div class="md:col-span-2 space-y-2">
+                            <label class="text-sm font-bold text-slate-600">Reçu / Documents (Optionnel)</label>
+                            <div class="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center hover:border-medical-600 transition-colors cursor-pointer bg-slate-50">
+                                <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-300 mb-4"></i>
+                                <p class="text-sm font-medium text-slate-500">Cliquez ou glissez vos fichiers ici</p>
+                                <p class="text-xs text-slate-400 mt-2">PDF, JPG, PNG (Max 5Mo)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between">
+                    <button type="button" onclick="goToStep(1)" class="text-slate-400 font-bold hover:text-slate-600 px-6 py-4 transition-all">Retour</button>
+                    <button type="button" onclick="goToStep(3)" class="bg-medical-600 text-white px-10 py-4 rounded-xl font-bold hover:bg-medical-700 transition-all shadow-xl shadow-medical-600/20 flex items-center gap-2">
+                        Récapitulatif
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 3: Confirmation -->
+            <div id="step3" class="step-inactive space-y-8">
+                <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
+                    <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                        <span class="w-8 h-8 rounded-full bg-medical-100 text-medical-600 flex items-center justify-center text-sm">3</span>
+                        Résumé de la commande
+                    </h2>
+                    
+                    <div class="space-y-6">
+                        <div class="flex justify-between p-4 bg-slate-50 rounded-2xl">
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Service sélectionné</p>
+                                <p id="summaryService" class="font-bold text-slate-800"></p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Prix total</p>
+                                <p id="summaryPrice" class="font-bold text-medical-600 text-xl"></p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-8 px-4">
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Patient</p>
+                                <p id="summaryPatient" class="text-sm font-medium text-slate-700"></p>
+                                <p id="summaryPhone" class="text-sm font-medium text-slate-500 mt-1"></p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">RDV Prévu</p>
+                                <p id="summaryDateTime" class="text-sm font-medium text-slate-700"></p>
+                            </div>
+                        </div>
+
+                        <div class="px-4">
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Adresse</p>
+                            <p id="summaryAddress" class="text-sm font-medium text-slate-700"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between">
+                    <button type="button" onclick="goToStep(2)" class="text-slate-400 font-bold hover:text-slate-600 px-6 py-4 transition-all">Modifier</button>
+                    <button type="submit" class="bg-accent-500 text-white px-12 py-5 rounded-2xl font-bold hover:bg-accent-600 transition-all shadow-xl shadow-accent-500/20 flex items-center gap-3 scale-110">
+                        Confirmer la réservation
+                        <i class="fa-solid fa-circle-check"></i>
+                    </button>
+                </div>
+            </div>
+
+        </form>
+    </main>
+
+    <script src="api.js"></script>
+    <script>
+        let currentStep = 1;
+        const selected = JSON.parse(sessionStorage.getItem('selectedService') || '{}');
+        const user = JSON.parse(localStorage.getItem('mediLogUser') || '{}');
+
+        // Pre-fill user data
+        if (user.id) {
+            document.getElementById('patientName').value = user.name || '';
+            document.getElementById('patientEmail').value = user.username + '@medilog.ma';
+        }
+
+        // Display selected service
+        document.getElementById('serviceTitle').innerText = selected.name || 'Nouvelle demande';
+        document.getElementById('servicePrice').innerText = (selected.price || '0') + ' DH';
+
+        function goToStep(step) {
+            // Validation simple
+            if (step > currentStep) {
+                if (currentStep === 1) {
+                    if (!document.getElementById('patientName').value || !document.getElementById('patientPhone').value) {
+                        alert("Veuillez remplir les informations obligatoires.");
+                        return;
+                    }
+                }
+            }
+
+            // UI Switch
+            document.getElementById(`step${currentStep}`).className = 'step-inactive';
+            document.getElementById(`step${step}`).className = 'step-active';
+            
+            // Progress dots
+            document.getElementById(`dot${currentStep}`).className = 'progress-dot dot-inactive';
+            document.getElementById(`dot${step}`).className = 'progress-dot dot-active';
+
+            if (step === 3) prepareSummary();
+            currentStep = step;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function prepareSummary() {
+            document.getElementById('summaryService').innerText = selected.name;
+            document.getElementById('summaryPrice').innerText = selected.price + ' DH';
+            document.getElementById('summaryPatient').innerText = document.getElementById('patientName').value;
+            document.getElementById('summaryPhone').innerText = document.getElementById('patientPhone').value;
+            document.getElementById('summaryDateTime').innerText = document.getElementById('reqDate').value + ' à ' + document.getElementById('reqTime').value;
+            document.getElementById('summaryAddress').innerText = document.getElementById('patientAddress').value;
+        }
+
+        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const data = {
+                patientId: user.id,
+                medecinId: 1, // Default or selected
+                medecinName: document.getElementById('docSelect').value,
+                service: selected.id,
+                serviceName: selected.name,
+                date: document.getElementById('reqDate').value,
+                time: document.getElementById('reqTime').value,
+                address: document.getElementById('patientAddress').value,
+                status: 'Attente'
+            };
+
+            try {
+                // Simulate creation
+                await createReservation(data);
+                sessionStorage.setItem('lastMissionId', '#ML-' + Math.floor(Math.random() * 9000 + 1000));
+                window.location.href = 'confirmation.html';
+            } catch (err) {
+                alert("Erreur lors de la réservation.");
+            }
+        });
+    </script>
+</body>
+</html>

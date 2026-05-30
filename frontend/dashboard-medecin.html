@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediLog Pro - Dashboard Médecin</title>
+    <!-- PWA Support -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="icon-512.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.08);
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.25rem;
+            border-radius: 1.25rem;
+            color: #64748b;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover {
+            background: #f1f5f9;
+            color: #2563eb;
+        }
+
+        .nav-link.active {
+            background: #2563eb;
+            color: white;
+            box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
+        }
+
+        .status-badge {
+            padding: 0.4rem 1rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-livre {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-analyse {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-reçu {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .status-terminé {
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
+
+        .critic-normal {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .critic-warning {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+            animation: pulse-orange 2s infinite;
+        }
+
+        .critic-danger {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            animation: glow-red 2s infinite;
+        }
+
+        @keyframes pulse-orange {
+            0% {
+                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+            }
+        }
+
+        @keyframes glow-red {
+            0% {
+                box-shadow: 0 0 5px rgba(239, 68, 68, 0.2);
+            }
+
+            50% {
+                box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+            }
+
+            100% {
+                box-shadow: 0 0 5px rgba(239, 68, 68, 0.2);
+            }
+        }
+
+        .analysis-card {
+            background: white;
+            border: 1px solid #f1f5f9;
+            border-radius: 1.75rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .analysis-card:hover {
+            border-color: #2563eb;
+            transform: scale(1.02);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: #f1f5f9;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .modal-content {
+            background: #f8fafc;
+            border-radius: 3.5rem;
+            width: 100%;
+            max-width: 90rem;
+            max-height: 95vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .health-score-circle {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .health-score-svg {
+            transform: rotate(-90deg);
+            width: 140px;
+            height: 140px;
+        }
+
+        .circle-bg {
+            fill: none;
+            stroke: #e2e8f0;
+            stroke-width: 10;
+        }
+
+        .circle-progress {
+            fill: none;
+            stroke-width: 10;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .search-input {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.25rem;
+            padding: 0.875rem 1.25rem 0.875rem 3.5rem;
+            width: 100%;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+            outline: none;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .hero-gradient {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes pulse-mic {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+
+            70% {
+                transform: scale(1.1);
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
+        .mic-active {
+            background: #ef4444 !important;
+            color: white !important;
+            animation: pulse-mic 1.5s infinite;
+        }
+
+        /* ===== MOBILE BOTTOM NAV ===== */
+        .mobile-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(241, 245, 249, 0.8);
+            z-index: 100;
+            padding: 0.5rem 0.75rem;
+            padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+            box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .mobile-bottom-nav .nav-items {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .mobile-bottom-nav .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.2rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #94a3b8;
+            position: relative;
+        }
+
+        .mobile-bottom-nav .nav-item.active {
+            color: #2563eb;
+        }
+
+        .mobile-bottom-nav .nav-item.active::before {
+            content: '';
+            position: absolute;
+            top: -0.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2rem;
+            height: 3px;
+            background: #2563eb;
+            border-radius: 0 0 4px 4px;
+        }
+
+        .mobile-bottom-nav .nav-item i {
+            font-size: 1.25rem;
+        }
+
+        .mobile-bottom-nav .nav-item span {
+            font-size: 0.6rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .app-download-banner {
+            display: none;
+            position: fixed;
+            bottom: 5.5rem;
+            left: 1rem;
+            right: 1rem;
+            z-index: 99;
+            border-radius: 1.75rem;
+            overflow: hidden;
+            animation: slideUpBanner 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            box-shadow: 0 20px 60px -15px rgba(37, 99, 235, 0.35);
+        }
+
+        @keyframes slideUpBanner {
+            from {
+                opacity: 0;
+                transform: translateY(100%);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .app-download-banner .banner-inner {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-download-banner .banner-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .app-download-banner .banner-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .app-download-banner .banner-title {
+            color: white;
+            font-weight: 800;
+            font-size: 0.85rem;
+        }
+
+        .app-download-banner .banner-desc {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
+
+        .app-download-banner .btn-install {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.75rem;
+            font-size: 0.7rem;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .app-download-banner .btn-close-banner {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .mobile-sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+        }
+
+        .mobile-sidebar-overlay.active {
+            display: block;
+        }
+
+        .mobile-sidebar-drawer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 280px;
+            background: white;
+            z-index: 201;
+            transform: translateX(-100%);
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .mobile-sidebar-drawer.open {
+            transform: translateX(0);
+        }
+
+        @media (max-width: 1023px) {
+            .mobile-bottom-nav {
+                display: block;
+            }
+
+            main {
+                padding-bottom: 6rem !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Mobile Sidebar Overlay -->
+    <div class="mobile-sidebar-overlay" id="mobileSidebarOverlay" onclick="closeMobileSidebar()"></div>
+    <div class="mobile-sidebar-drawer" id="mobileSidebarDrawer">
+        <div class="flex items-center justify-between mb-8">
+            <span class="text-2xl font-bold text-slate-900">MediLog <span class="text-blue-600">Pro</span></span>
+            <button onclick="closeMobileSidebar()"
+                class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500"><i
+                    class="fa-solid fa-xmark"></i></button>
+        </div>
+        <nav class="flex flex-col space-y-2 flex-1">
+            <a href="#" onclick="showSection('dashboard'); closeMobileSidebar()"
+                class="flex items-center gap-3 text-slate-700 font-semibold p-3 rounded-xl hover:bg-slate-50"><i
+                    class="fas fa-th-large w-5"></i> Vue d'ensemble</a>
+            <a href="#" onclick="showSection('analyses'); closeMobileSidebar()"
+                class="flex items-center gap-3 text-slate-700 font-semibold p-3 rounded-xl hover:bg-slate-50"><i
+                    class="fas fa-clipboard-list w-5"></i> Dossiers Labo</a>
+            <a href="#" onclick="showSection('patients'); closeMobileSidebar()"
+                class="flex items-center gap-3 text-slate-700 font-semibold p-3 rounded-xl hover:bg-slate-50"><i
+                    class="fas fa-user-friends w-5"></i> Base Patients</a>
+            <a href="#" onclick="showSection('config'); closeMobileSidebar()"
+                class="flex items-center gap-3 text-slate-700 font-semibold p-3 rounded-xl hover:bg-slate-50"><i
+                    class="fas fa-cog w-5"></i> Configuration</a>
+        </nav>
+        <div class="pt-4 border-t border-slate-100 mt-auto">
+            <button onclick="logout()"
+                class="w-full py-3 text-red-500 font-bold text-sm hover:bg-red-50 rounded-xl flex items-center justify-center gap-2"><i
+                    class="fa-solid fa-power-off"></i> Déconnexion</button>
+        </div>
+    </div>
+
+    <div id="app" class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="hidden lg:flex flex-col w-80 bg-white border-r border-slate-100 p-8 space-y-10 z-30">
+            <div class="flex items-center gap-4 cursor-pointer" onclick="showSection('dashboard')">
+                <div
+                    class="w-12 h-12 hero-gradient rounded-2xl flex items-center justify-center shadow-xl shadow-blue-200 text-white">
+                    <i class="fas fa-microscope text-2xl"></i>
+                </div>
+                <div>
+                    <span class="text-2xl font-bold text-slate-900 hover:text-blue-600 transition-all">MediLog <span
+                            class="text-blue-600">Pro</span></span>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Expert Healthcare</p>
+                </div>
+            </div>
+
+            <nav class="space-y-2 flex-1">
+                <div onclick="showSection('dashboard')" id="nav-dashboard" class="nav-link active">
+                    <i class="fas fa-th-large text-lg"></i> Vue d'ensemble
+                </div>
+                <div onclick="showSection('analyses')" id="nav-analyses" class="nav-link">
+                    <i class="fas fa-clipboard-list text-lg"></i> Dossiers Labo
+                </div>
+                <div onclick="showSection('patients')" id="nav-patients" class="nav-link">
+                    <i class="fas fa-user-friends text-lg"></i> Base Patients
+                </div>
+                <div class="pt-10">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-4 mb-4">Paramètres</p>
+                    <div onclick="showSection('config')" id="nav-config" class="nav-link">
+                        <i class="fas fa-cog text-lg"></i> Configuration
+                    </div>
+                    <div onclick="showSection('security')" id="nav-security" class="nav-link">
+                        <i class="fas fa-shield-alt text-lg"></i> Sécurité
+                    </div>
+                </div>
+            </nav>
+
+            <div id="navbar-user-info" class="pt-6 border-t border-slate-100"></div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto custom-scrollbar bg-[#f8fafc] p-4 lg:p-10">
+            <header class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+                <div class="flex items-center gap-4">
+                    <button onclick="openMobileSidebar()" class="lg:hidden text-slate-600 text-xl"><i
+                            class="fa-solid fa-bars"></i></button>
+                    <div>
+                        <h1 id="section-title" class="text-3xl font-extrabold text-slate-900 tracking-tight">Tableau de
+                            Bord</h1>
+                        <p class="text-slate-500 font-medium mt-1">Bienvenue, Dr. <span id="doctor-name"
+                                class="text-blue-600">...</span></p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
+                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span id="txt-sys-op"
+                            class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Système
+                            Opérationnel</span>
+                    </div>
+                    <button onclick="toggleNotifications()"
+                        class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-400 border border-slate-100 hover:text-blue-600 transition-all relative">
+                        <i class="fas fa-bell"></i>
+                        <span id="notif-badge"
+                            class="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                    </button>
+                    <!-- Notification Dropdown -->
+                    <div id="notif-dropdown"
+                        class="absolute top-24 right-10 w-80 bg-white rounded-3xl shadow-2xl border border-slate-100 hidden z-50 animate-[fadeIn_0.3s_ease-out]">
+                        <div class="p-6 border-b border-slate-50 flex justify-between items-center">
+                            <h4 class="font-bold text-slate-900">Notifications</h4>
+                            <span class="text-[10px] text-blue-600 font-bold uppercase cursor-pointer"
+                                onclick="clearNotifications()">Tout marquer lu</span>
+                        </div>
+                        <div class="max-h-96 overflow-y-auto p-4 space-y-4" id="notif-list">
+                            <div class="p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                                <p class="text-xs font-bold text-slate-900">Nouvelle analyse reçue</p>
+                                <p class="text-[10px] text-slate-500 mt-1">Dossier #PKG-20260412 disponible.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Section -->
+            <div id="section-dashboard" class="block animate-[fadeIn_0.5s_ease-out]">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                    <div class="glass-card p-8 border-b-4 border-blue-500">
+                        <div class="flex items-center justify-between mb-4">
+                            <div
+                                class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl">
+                                <i class="fas fa-hourglass-start"></i></div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">En
+                                attente</span>
+                        </div>
+                        <h3 class="text-4xl font-black text-slate-900" id="stats-pending">0</h3>
+                        <p class="text-xs text-slate-400 mt-2 font-medium">Analyses à réceptionner</p>
+                    </div>
+                    <div class="glass-card p-8 border-b-4 border-amber-500">
+                        <div class="flex items-center justify-between mb-4">
+                            <div
+                                class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl">
+                                <i class="fas fa-vial"></i></div>
+                            <span
+                                class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Traitement</span>
+                        </div>
+                        <h3 class="text-4xl font-black text-amber-600" id="stats-active">0</h3>
+                        <p class="text-xs text-slate-400 mt-2 font-medium">Dossiers en cours d'étude</p>
+                    </div>
+                    <div class="glass-card p-8 border-b-4 border-green-500">
+                        <div class="flex items-center justify-between mb-4">
+                            <div
+                                class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center text-xl">
+                                <i class="fas fa-check-double"></i></div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Clôturés</span>
+                        </div>
+                        <h3 class="text-4xl font-black text-green-600" id="stats-done">0</h3>
+                        <p class="text-xs text-slate-400 mt-2 font-medium">Patients déjà informés</p>
+                    </div>
+                </div>
+
+                <div class="glass-card p-10">
+                    <div class="flex items-center justify-between mb-10">
+                        <h3 class="text-xl font-bold text-slate-900 flex items-center gap-3">
+                            <i class="fas fa-stream text-blue-600"></i> Activité Récente
+                        </h3>
+                        <button onclick="showSection('analyses')"
+                            class="text-blue-600 text-sm font-bold hover:underline">Voir tout le registre</button>
+                    </div>
+                    <div id="recent-receivals" class="space-y-6">
+                        <!-- JS Injection -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analyses Section -->
+            <div id="section-analyses" class="hidden animate-[fadeIn_0.5s_ease-out]">
+                <div class="glass-card p-10">
+                    <div class="flex items-center justify-between mb-10">
+                        <h3 class="text-2xl font-bold text-slate-900">Registre Global des Analyses</h3>
+                        <div class="flex gap-4">
+                            <input type="text" placeholder="Rechercher un dossier..."
+                                class="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/20">
+                            <button
+                                class="bg-slate-900 text-white px-6 py-2 rounded-xl text-sm font-bold">Filtrer</button>
+                        </div>
+                    </div>
+                    <div id="full-analyses-list" class="space-y-4"></div>
+                </div>
+            </div>
+
+            <!-- Patients Section -->
+            <div id="section-patients" class="hidden animate-[fadeIn_0.5s_ease-out]">
+                <div class="glass-card p-10">
+                    <h3 class="text-2xl font-bold text-slate-900 mb-10 tracking-tight">Portefeuille Patients</h3>
+                    <div id="patients-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+                </div>
+            </div>
+
+            <!-- Configuration Section -->
+            <div id="section-config" class="hidden animate-[fadeIn_0.5s_ease-out]">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="glass-card p-10">
+                        <h3 class="text-xl font-bold mb-8">Préférences du Cabinet</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nom du
+                                    Cabinet</label>
+                                <input type="text" value="Cabinet Médical MediLog"
+                                    class="w-full mt-2 p-4 bg-slate-50 rounded-xl border border-slate-100 outline-none focus:ring-2 focus:ring-blue-500/20">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Langue de
+                                    l'interface</label>
+                                <select id="lang-select" onchange="changeLanguage(this.value)"
+                                    class="w-full mt-2 p-4 bg-slate-50 rounded-xl border border-slate-100 outline-none">
+                                    <option value="fr">Français (France)</option>
+                                    <option value="en">English (UK)</option>
+                                    <option value="ar">العربية (Arabic)</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center justify-between p-4 bg-blue-50 rounded-2xl cursor-pointer"
+                                onclick="toggleEmailNotifs()">
+                                <div>
+                                    <p class="font-bold text-blue-900 text-sm">Notifications Email</p>
+                                    <p class="text-xs text-blue-600">Alerte lors de nouvelles analyses</p>
+                                </div>
+                                <div id="email-toggle"
+                                    class="w-12 h-6 bg-blue-600 rounded-full relative transition-all">
+                                    <div class="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-10">
+                        <h3 class="text-xl font-bold mb-8">Signature & Cachet</h3>
+                        <div id="stamp-dropzone"
+                            class="border-2 border-dashed border-slate-200 rounded-[2rem] p-8 text-center bg-slate-50 relative overflow-hidden group">
+                            <div id="stamp-preview-container"
+                                class="hidden absolute inset-0 bg-white z-10 flex items-center justify-center p-4">
+                                <img id="stamp-preview-img" class="max-h-full mix-blend-multiply" src="" alt="Cachet">
+                                <button onclick="removeStamp()" class="absolute top-4 right-4 text-red-500"><i
+                                        class="fas fa-times-circle"></i></button>
+                            </div>
+                            <i class="fas fa-file-signature text-4xl text-slate-300 mb-4"></i>
+                            <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Cachet numérique
+                                (.png)</p>
+                            <input type="file" id="stamp-input" class="hidden" accept="image/*"
+                                onchange="handleStampUpload(this)">
+                            <button onclick="document.getElementById('stamp-input').click()"
+                                class="mt-4 px-6 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 relative z-20">Téléverser</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Section -->
+            <div id="section-security" class="hidden animate-[fadeIn_0.5s_ease-out]">
+                <div class="glass-card p-10 max-w-4xl">
+                    <h3 class="text-xl font-bold mb-8">Protection des Données</h3>
+                    <div class="space-y-8">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-8">
+                            <div class="flex items-center gap-6">
+                                <div
+                                    class="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center text-xl">
+                                    <i class="fas fa-user-shield"></i></div>
+                                <div>
+                                    <p class="font-bold text-slate-900">Double Authentification (2FA)</p>
+                                    <p class="text-xs text-slate-400">Protégez l'accès par un code SMS</p>
+                                </div>
+                            </div>
+                            <button onclick="toggle2FA()" id="btn-2fa"
+                                class="px-6 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Activer</button>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-6">
+                                <div
+                                    class="w-14 h-14 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center text-xl">
+                                    <i class="fas fa-key"></i></div>
+                                <div>
+                                    <p class="font-bold text-slate-900">Changer le mot de passe</p>
+                                    <p class="text-xs text-slate-400">Dernière modification : il y a 3 mois</p>
+                                </div>
+                            </div>
+                            <button onclick="changePassword()"
+                                class="px-6 py-3 bg-white border border-slate-200 text-slate-900 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50">Modifier</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- PREMIUM CASE MODAL -->
+    <div id="case-modal" class="modal-overlay">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div
+                class="p-8 border-b border-slate-100 flex items-center justify-between bg-white/80 backdrop-blur-md z-20">
+                <div class="flex items-center gap-8">
+                    <div id="modal-patient-avatar"
+                        class="w-20 h-20 hero-gradient rounded-[2rem] flex items-center justify-center text-3xl text-white font-black shadow-2xl shadow-blue-500/30">
+                        P
+                    </div>
+                    <div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight" id="modal-patient-name">Dossier
+                            Patient</h2>
+                        <div class="flex items-center gap-4 mt-2">
+                            <span
+                                class="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-widest"
+                                id="modal-case-id">PKG-0000</span>
+                            <span class="w-1.5 h-1.5 bg-slate-300 rounded-full"></span>
+                            <span class="text-xs font-bold text-slate-400 italic">Dernière synchronisation Labo : Temps
+                                réel</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button
+                        class="w-14 h-14 bg-slate-50 text-slate-400 rounded-2xl hover:bg-slate-100 hover:text-slate-600 transition-all flex items-center justify-center text-xl"><i
+                            class="fas fa-print"></i></button>
+                    <button onclick="closeModal()"
+                        class="w-14 h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-xl hover:bg-slate-800 transition-all text-xl"><i
+                            class="fas fa-times"></i></button>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-10 bg-[#f8fafc]">
+                <div class="grid grid-cols-12 gap-10">
+                    <!-- Left Column: Insights & Global Data -->
+                    <div class="col-span-12 lg:col-span-4 space-y-10">
+                        <div class="glass-card p-10 bg-white shadow-xl shadow-slate-200/50">
+                            <h3 class="font-bold text-slate-900 mb-8 flex items-center gap-3">
+                                <i class="fas fa-heart-pulse text-red-500"></i> Score de Santé Vital
+                            </h3>
+                            <div class="flex flex-col items-center">
+                                <div class="health-score-circle mb-8">
+                                    <svg class="health-score-svg">
+                                        <circle class="circle-bg" cx="70" cy="70" r="62"></circle>
+                                        <circle id="score-circle" class="circle-progress" cx="70" cy="70" r="62"
+                                            style="stroke-dasharray: 389.5; stroke-dashoffset: 97.4; stroke: #10b981;">
+                                        </circle>
+                                    </svg>
+                                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                        <span class="text-5xl font-black text-slate-900"
+                                            id="health-score-value">75</span>
+                                        <span
+                                            class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">Global
+                                            %</span>
+                                    </div>
+                                </div>
+                                <div class="w-full space-y-6">
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between items-center px-1">
+                                            <span
+                                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Analyses
+                                                Stables</span>
+                                            <span class="text-sm font-black text-green-600"
+                                                id="stats-normal-count">12</span>
+                                        </div>
+                                        <div class="progress-bar-container !my-0">
+                                            <div id="stats-normal-bar" class="progress-bar-fill bg-green-500"
+                                                style="width: 80%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between items-center px-1">
+                                            <span
+                                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Points
+                                                Critiques</span>
+                                            <span class="text-sm font-black text-red-600"
+                                                id="stats-danger-count">2</span>
+                                        </div>
+                                        <div class="progress-bar-container !my-0">
+                                            <div id="stats-danger-bar" class="progress-bar-fill bg-red-500"
+                                                style="width: 15%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            class="glass-card p-8 hero-gradient text-white relative overflow-hidden shadow-2xl shadow-blue-500/40">
+                            <div
+                                class="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-48 h-48 bg-white/10 rounded-full blur-3xl">
+                            </div>
+                            <h3 class="font-bold mb-6 flex items-center gap-3">
+                                <i class="fas fa-brain animate-pulse"></i> Diagnostic Assisté par IA
+                            </h3>
+                            <div id="ai-summary" class="text-sm text-blue-50 leading-[1.8] font-medium mb-8">
+                                Analyse multidimensionnelle en cours... Détection de biomarqueurs anormaux pour le cycle
+                                du glucose.
+                            </div>
+                            <button onclick="suggestProtocol()"
+                                class="w-full py-4 bg-white/10 hover:bg-white/20 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/20 backdrop-blur-md">
+                                Voir protocole suggéré
+                            </button>
+                        </div>
+
+                        <div class="glass-card p-10 bg-white">
+                            <h3 class="font-bold text-slate-900 mb-6 flex items-center gap-3">
+                                <i class="fas fa-pen-nib text-slate-400"></i> Notes Cliniques
+                            </h3>
+                            <textarea id="med-notes"
+                                class="w-full h-48 p-6 bg-slate-50 rounded-3xl border-2 border-transparent focus:border-blue-500/20 focus:bg-white outline-none text-sm transition-all custom-scrollbar font-medium text-slate-600"
+                                placeholder="Saisir les observations sur l'état général du patient..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Results & Action -->
+                    <div class="col-span-12 lg:col-span-8 space-y-10">
+                        <!-- Search & Filter Bar -->
+                        <div class="flex flex-col md:flex-row gap-6 items-center justify-between">
+                            <div class="relative w-full md:w-[400px]">
+                                <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="text" id="search-analysis" placeholder="Filtrer les biomarqueurs..."
+                                    class="search-input">
+                            </div>
+                            <div class="flex items-center gap-3 p-1.5 bg-white rounded-2xl border border-slate-100">
+                                <button onclick="filterAnalyses('all')" id="filter-all"
+                                    class="px-6 py-2.5 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Tous</button>
+                                <button onclick="filterAnalyses('danger')" id="filter-danger"
+                                    class="px-6 py-2.5 bg-white text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-50 hover:text-red-600 transition-all">Critiques</button>
+                                <button onclick="filterAnalyses('warning')" id="filter-warning"
+                                    class="px-6 py-2.5 bg-white text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-50 hover:text-amber-600 transition-all">Alertes</button>
+                            </div>
+                        </div>
+
+                        <!-- Analyses Grid -->
+                        <div id="analyses-detail-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <!-- JS Injected Cards -->
+                        </div>
+
+                        <!-- Prescription Master Area -->
+                        <div
+                            class="glass-card p-12 bg-white border-2 border-blue-600/10 shadow-2xl shadow-blue-900/5 relative">
+                            <div
+                                class="absolute top-0 right-10 -translate-y-1/2 px-8 py-3 hero-gradient text-white rounded-full text-xs font-black uppercase tracking-widest shadow-xl">
+                                Ordonnance Digitale
+                            </div>
+
+                            <div class="mb-10">
+                                <h3 class="text-2xl font-black text-slate-900 tracking-tight">Protocole Thérapeutique
+                                </h3>
+                                <p class="text-sm text-slate-400 font-medium mt-1">Générez une ordonnance sécurisée et
+                                    transmise instantanément au patient.</p>
+                            </div>
+
+                            <div class="space-y-8">
+                                <div class="relative group">
+                                    <textarea id="prescription-text"
+                                        class="w-full h-64 p-10 bg-slate-50 rounded-[2.5rem] border-2 border-transparent focus:border-blue-500/10 focus:bg-white outline-none text-lg shadow-inner transition-all font-semibold text-slate-700 leading-relaxed custom-scrollbar"
+                                        placeholder="Ex: Metformine 850mg • 2 fois/jour..."></textarea>
+                                    <div
+                                        class="absolute bottom-6 right-6 flex gap-3 opacity-0 group-hover:opacity-100 transition-all">
+                                        <button id="mic-btn" onclick="toggleVoiceRecognition()"
+                                            class="w-12 h-12 bg-white text-slate-400 rounded-2xl flex items-center justify-center hover:text-blue-600 shadow-md transition-all">
+                                            <i class="fas fa-microphone"></i>
+                                        </button>
+                                        <button
+                                            class="w-12 h-12 bg-white text-slate-400 rounded-2xl flex items-center justify-center hover:text-blue-600 shadow-md transition-all"><i
+                                                class="fas fa-magic"></i></button>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col xl:flex-row justify-between items-center gap-10 pt-6">
+                                    <div onclick="openSignatureModal()"
+                                        class="flex items-center gap-6 group cursor-pointer p-6 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 hover:border-blue-500/30 hover:bg-blue-50/30 transition-all w-full xl:w-auto">
+                                        <div
+                                            class="w-16 h-16 bg-white text-slate-400 rounded-2xl flex items-center justify-center text-2xl group-hover:text-blue-600 shadow-sm transition-all">
+                                            <i class="fas fa-signature"></i>
+                                        </div>
+                                        <div>
+                                            <p
+                                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                                                Authentification</p>
+                                            <p id="signature-status" class="text-base font-bold text-slate-800">Cliquer
+                                                pour signer</p>
+                                        </div>
+                                        <div id="signature-preview" class="hidden">
+                                            <img id="sig-img" class="h-12 mix-blend-multiply" src="" alt="Signature">
+                                        </div>
+                                    </div>
+
+                                    <button onclick="sendPrescription()"
+                                        class="w-full xl:w-auto px-16 py-6 hero-gradient text-white rounded-[2.5rem] font-black text-xl hover:scale-105 active:scale-95 transition-all shadow-[0_20px_40px_-10px_rgba(37,99,235,0.4)] flex items-center justify-center gap-4">
+                                        Valider & Envoyer <i class="fas fa-paper-plane text-base"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SIGNATURE MODAL -->
+    <div id="signature-modal" class="modal-overlay">
+        <div class="modal-content !max-w-xl p-10 bg-white">
+            <div class="flex items-center justify-between mb-8">
+                <h3 class="text-2xl font-black text-slate-900 tracking-tight">Signature Digitale</h3>
+                <button onclick="clearSignature()"
+                    class="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-red-500 transition-all"><i
+                        class="fas fa-eraser mr-2"></i> Effacer</button>
+            </div>
+            <div
+                class="bg-slate-50 border-4 border-slate-100 rounded-[2.5rem] relative mb-10 overflow-hidden cursor-crosshair">
+                <canvas id="signature-pad" width="500" height="250" class="w-full"></canvas>
+            </div>
+            <div class="flex gap-6">
+                <button onclick="closeSignatureModal()"
+                    class="flex-1 py-5 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest text-xs">Annuler</button>
+                <button onclick="saveSignature()"
+                    class="flex-1 py-5 hero-gradient text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-blue-200">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="api.js"></script>
+    <script src="app-common.js"></script>
+    <script>
+        const MEDICAL_ANALYSES_DB = {
+            'Glycémie à jeun': { unit: 'g/L', normal: [0.70, 1.10], desc: 'Niveau de glucose sanguin', icon: 'fa-cube' },
+            'Cholestérol Total': { unit: 'g/L', normal: [1.50, 2.00], desc: 'Bilan lipidique global', icon: 'fa-dna' },
+            'Hémoglobine': { unit: 'g/dL', normal: [13, 17], desc: 'Capacité de transport O2', icon: 'fa-droplet' },
+            'TSH Ultra-sensible': { unit: 'mUI/L', normal: [0.4, 4.0], desc: 'Régulation thyroïdienne', icon: 'fa-stethoscope' },
+            'Vitamine D (25-OH)': { unit: 'ng/mL', normal: [30, 60], desc: 'Santé osseuse & immunité', icon: 'fa-sun' },
+            'Créatinine Sérique': { unit: 'mg/L', normal: [7, 13], desc: 'Indice de fonction rénale', icon: 'fa-filter' },
+            'CRP (Protéine C)': { unit: 'mg/L', normal: [0, 5], desc: 'Marqueur d\'inflammation', icon: 'fa-fire' },
+            'Ferritine': { unit: 'µg/L', normal: [20, 250], desc: 'Stockage du fer', icon: 'fa-magnet' },
+            'Globules blancs': { unit: '/mm3', normal: [4000, 10000], desc: 'Défense immunitaire', icon: 'fa-shield-virus' },
+            'Plaquettes': { unit: '/mm3', normal: [150000, 450000], desc: 'Coagulation sanguine', icon: 'fa-bandage' },
+            'Sodium (Natrémie)': { unit: 'mmol/L', normal: [135, 145], desc: 'Balance hydro-électrolytique', icon: 'fa-water' },
+            'Potassium (Kaliémie)': { unit: 'mmol/L', normal: [3.5, 5.0], desc: 'Équilibre cellulaire', icon: 'fa-bolt' },
+            'Transaminases SGOT': { unit: 'UI/L', normal: [10, 40], desc: 'Santé hépatique', icon: 'fa-liver' },
+            'Acide Urique': { unit: 'mg/L', normal: [35, 70], desc: 'Produit de dégradation purines', icon: 'fa-flask' }
+        };
+
+        let allAnalyses = [];
+        let currentCase = null;
+        let isDrawing = false;
+        let sigCanvas, sigCtx;
+        let activeAnalysisFilter = 'all';
+        let currentAnalysesList = [];
+        let recognition = null;
+        let isListening = false;
+
+        function initVoiceRecognition() {
+            window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (window.SpeechRecognition) {
+                recognition = new SpeechRecognition();
+                recognition.lang = 'fr-FR';
+                recognition.interimResults = true;
+                recognition.continuous = true;
+                recognition.maxAlternatives = 1;
+
+                recognition.onstart = () => {
+                    console.log('Microphone activé, commencez à parler...');
+                };
+
+                recognition.onresult = (event) => {
+                    const textArea = document.getElementById('prescription-text');
+                    let interimTranscript = '';
+                    let finalTranscript = '';
+
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        const transcript = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            finalTranscript += transcript;
+                        } else {
+                            interimTranscript += transcript;
+                        }
+                    }
+
+                    if (finalTranscript) {
+                        // Append final text
+                        const currentText = textArea.value.trim();
+                        textArea.value = (currentText ? currentText + ' ' : '') + finalTranscript;
+                    }
+
+                    // Optional: show interim text somewhere or just wait for final
+                    if (interimTranscript) {
+                        console.log('Interim:', interimTranscript);
+                        // We could show it in a placeholder or title
+                    }
+                };
+
+                recognition.onspeechend = () => {
+                    console.log('Fin de parole détectée');
+                };
+
+                recognition.onend = () => {
+                    console.log('Service de reconnaissance arrêté');
+                    if (isListening) {
+                        console.log('Redémarrage automatique...');
+                        try { recognition.start(); } catch (e) { }
+                    }
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Erreur reconnaissance:', event.error);
+                    if (event.error === 'network') alert("Erreur réseau : La reconnaissance vocale nécessite une connexion internet.");
+                };
+            }
+        }
+
+        function toggleVoiceRecognition() {
+            if (!recognition) {
+                initVoiceRecognition();
+            }
+
+            if (!recognition) {
+                alert("La reconnaissance vocale n'est pas supportée par votre navigateur.");
+                return;
+            }
+
+            if (isListening) {
+                stopListening();
+            } else {
+                startListening();
+            }
+        }
+
+        function startListening() {
+            isListening = true;
+            recognition.start();
+            document.getElementById('mic-btn').classList.add('mic-active');
+            // Show a small toast or notification
+            console.log('Dictée vocale activée...');
+        }
+
+        function suggestProtocol() {
+            const dangers = currentAnalysesList.filter(a => a.criticClass === 'danger' || a.criticClass === 'warning');
+            if (dangers.length === 0) {
+                alert("Aucune anomalie majeure détectée. Continuez le suivi habituel.");
+                return;
+            }
+
+            const protocolMap = {
+                'Glycémie à jeun': 'Metformine 850mg (1 comprimé matin et soir au milieu des repas). Surveillance glycémique hebdomadaire.',
+                'Cholestérol Total': 'Atorvastatine 20mg (1 comprimé le soir). Régime pauvre en graisses saturées.',
+                'Hémoglobine': 'Supplémentation en fer (Tardyferon 80mg, 1 comprimé/jour pendant 3 mois).',
+                'TSH Ultra-sensible': 'Lévothyrox (dosage à ajuster selon poids). Contrôle TSH dans 6 semaines.',
+                'Vitamine D (25-OH)': 'Supplémentation en Vitamine D (Uvédose 100 000 UI, 1 ampoule par mois).',
+                'Créatinine Sérique': 'Hydratation abondante (1.5L/jour). Arrêt temporaire des AINS. Contrôle rénal sous 15 jours.',
+                'CRP (Protéine C)': 'Recherche de foyer infectieux ou inflammatoire. Paracétamol 1g si douleurs.',
+                'Ferritine': 'Bilan martial complet et recherche de saignements occultes.',
+                'Globules blancs': 'Surveillance température. Antibiothérapie si fièvre > 38.5°C.',
+                'Acide Urique': 'Allopurinol 100mg/jour. Diminution de la consommation de viandes rouges et d\'alcool.',
+                'Transaminases SGOT': 'Arrêt de toute substance hépatotoxique. Bilan hépatique complet (échographie).'
+            };
+
+            let suggestions = "PROTOCOLE SUGGÉRÉ PAR IA :\n\n";
+            dangers.forEach(d => {
+                const treatment = protocolMap[d.name] || `Surveillance accrue du paramètre ${d.name}.`;
+                suggestions += `• Pour ${d.name} (${d.value} ${d.unit}) : ${treatment}\n\n`;
+            });
+
+            suggestions += "---------------------------------\n";
+            suggestions += "Note : Ce protocole est une suggestion basée sur les normes cliniques. Veuillez valider selon votre expertise médicale.";
+
+            const textArea = document.getElementById('prescription-text');
+            textArea.value = suggestions;
+            textArea.focus();
+
+            // Animation effect on textarea
+            textArea.classList.add('ring-4', 'ring-blue-500/20');
+            setTimeout(() => textArea.classList.remove('ring-4', 'ring-blue-500/20'), 1000);
+        }
+
+        async function loadDoctorDashboard() {
+            try {
+                const res = await getReservations('medecin', window.currentUser.id);
+                const rawMissions = Array.isArray(res) ? res : (res.reservations || []);
+                allAnalyses = rawMissions;
+
+                const count = (statusList) => allAnalyses.filter(a => statusList.includes(a.status?.toUpperCase())).length;
+
+                document.getElementById('stats-pending').innerText = count(['LIVRE_AU_MEDECIN', 'LIVRE', 'ARRIVE']);
+                document.getElementById('stats-active').innerText = count(['EN_ANALYSE', 'ANALYSE']);
+                document.getElementById('stats-done').innerText = count(['ORDONNANCE_PRETE', 'TERMINE']);
+
+                renderAnalyses('recent', 'recent-receivals');
+                renderAnalyses('all', 'full-analyses-list');
+                renderPatients();
+                initSignaturePad();
+            } catch (err) {
+                console.error("Polling error:", err);
+            }
+        }
+
+        // Initialize polling every 10 seconds
+        setInterval(loadDoctorDashboard, 10000);
+
+        function initSignaturePad() {
+            sigCanvas = document.getElementById('signature-pad');
+            if (!sigCanvas) return;
+            sigCtx = sigCanvas.getContext('2d');
+            sigCtx.strokeStyle = '#1e293b';
+            sigCtx.lineWidth = 4;
+            sigCtx.lineCap = 'round';
+
+            const getPos = (e) => {
+                const rect = sigCanvas.getBoundingClientRect();
+                const scaleX = sigCanvas.width / rect.width;
+                const scaleY = sigCanvas.height / rect.height;
+                return {
+                    x: ((e.clientX || e.touches[0].clientX) - rect.left) * scaleX,
+                    y: ((e.clientY || e.touches[0].clientY) - rect.top) * scaleY
+                };
+            };
+
+            const start = (e) => { isDrawing = true; const pos = getPos(e); sigCtx.beginPath(); sigCtx.moveTo(pos.x, pos.y); };
+            const move = (e) => { if (!isDrawing) return; e.preventDefault(); const pos = getPos(e); sigCtx.lineTo(pos.x, pos.y); sigCtx.stroke(); };
+            const stop = () => { isDrawing = false; };
+
+            sigCanvas.addEventListener('mousedown', start);
+            sigCanvas.addEventListener('mousemove', move);
+            window.addEventListener('mouseup', stop);
+            sigCanvas.addEventListener('touchstart', start);
+            sigCanvas.addEventListener('touchmove', move);
+            sigCanvas.addEventListener('touchend', stop);
+        }
+
+        function clearSignature() { sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height); }
+        function openSignatureModal() { document.getElementById('signature-modal').classList.add('active'); }
+        function closeSignatureModal() { document.getElementById('signature-modal').classList.remove('active'); }
+
+        function saveSignature() {
+            const dataUrl = sigCanvas.toDataURL();
+            document.getElementById('sig-img').src = dataUrl;
+            document.getElementById('signature-preview').classList.remove('hidden');
+            document.getElementById('signature-status').innerText = 'Authentification Validée ✔';
+            document.getElementById('signature-status').className = 'text-sm font-black text-green-600 uppercase tracking-widest';
+            closeSignatureModal();
+        }
+
+        function renderAnalyses(mode, containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            let list = [...allAnalyses].sort((a, b) => b.id - a.id);
+            if (mode === 'recent') list = list.slice(0, 5);
+
+            container.innerHTML = list.length === 0 ?
+                '<div class="text-center py-20 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-100"><p class="text-slate-400 font-bold uppercase tracking-widest text-xs">Aucun dossier à traiter</p></div>' :
+                list.map(a => `
+                <div class="flex items-center justify-between p-6 bg-white border border-slate-100 rounded-3xl hover:shadow-2xl hover:border-blue-500/20 transition-all group">
+                    <div class="flex items-center gap-6">
+                        <div class="w-16 h-16 bg-slate-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+                            <i class="fas ${a.service === 'service_a' ? 'fa-flask' : 'fa-dna'}"></i>
+                        </div>
+                        <div>
+                            <p class="font-black text-slate-900 text-lg tracking-tight">${a.patientName || 'Patient'}</p>
+                            <div class="flex items-center gap-3 mt-1">
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">PKG-${20260000 + a.id}</span>
+                                <span class="w-1 h-1 bg-slate-200 rounded-full"></span>
+                                <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest">${a.serviceName}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-6">
+                        <span class="status-badge status-${a.status}">${a.status === 'livre' ? 'À RÉCEPTIONNER' : a.status}</span>
+                        ${a.status === 'livre' ?
+                        `<button onclick="confirmReception(${a.id})" class="px-8 py-3 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-lg">Valider PIN</button>` :
+                        `<button onclick="openCase(${a.id})" class="w-12 h-12 flex items-center justify-center text-blue-600 bg-blue-50 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm"><i class="fas fa-external-link-alt"></i></button>`
+                    }
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderPatients() {
+            const container = document.getElementById('patients-list');
+            if (!container) return;
+            const uniquePatients = [...new Map(allAnalyses.map(a => [a.patientName, a])).values()];
+
+            container.innerHTML = uniquePatients.map(p => `
+                <div class="glass-card p-8 flex flex-col items-center text-center">
+                    <div class="w-20 h-20 bg-slate-100 rounded-[2rem] flex items-center justify-center font-black text-2xl text-slate-400 mb-4">
+                        ${(p.patientName || '??').substring(0, 2).toUpperCase()}
+                    </div>
+                    <h4 class="font-black text-slate-900 text-lg">${p.patientName || 'Inconnu'}</h4>
+                    <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Dernière analyse : ${p.date}</p>
+                    <button onclick="showPatientHistory('${p.patientName}')" class="mt-6 w-full py-3 bg-slate-50 text-blue-600 font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-blue-600 hover:text-white transition-all">Consulter l'historique</button>
+                </div>
+            `).join('');
+        }
+
+        async function confirmReception(id) {
+            const pin = prompt('Veuillez saisir le code PIN de livraison :');
+            if (pin) {
+                await updateStatus(id, 'LIVRE_AU_MEDECIN');
+                alert('Dossier médical réceptionné. Les résultats sont maintenant disponibles.');
+                loadDoctorDashboard();
+            }
+        }
+
+        async function openCase(id) {
+            currentCase = allAnalyses.find(a => a.id == id);
+            document.getElementById('modal-patient-name').innerText = currentCase.patientName || 'Patient';
+            document.getElementById('modal-patient-avatar').innerText = (currentCase.patientName || 'P').substring(0, 1).toUpperCase();
+            document.getElementById('modal-case-id').innerText = `PKG-${20260000 + id}`;
+
+            generateMockAnalyses();
+            renderAnalysesDashboard();
+
+            document.getElementById('case-modal').classList.add('active');
+            updateStatus(id, 'EN_ANALYSE');
+        }
+
+        function generateMockAnalyses() {
+            const seed = currentCase.id;
+            currentAnalysesList = Object.keys(MEDICAL_ANALYSES_DB).map((name, index) => {
+                const config = MEDICAL_ANALYSES_DB[name];
+                const [min, max] = config.normal;
+                let value;
+                const random = Math.sin(seed + index) * 10000;
+                const isAnomalous = (random % 10) > 7;
+
+                if (isAnomalous) {
+                    value = (random % 2) > 1 ? max * 1.35 : min * 0.65;
+                } else {
+                    value = min + (Math.abs(random) % (max - min));
+                }
+
+                value = parseFloat(value.toFixed(index > 10 ? 0 : 2));
+
+                let status, criticClass, risk;
+                if (value > max) {
+                    status = 'Élevé';
+                    criticClass = (value > max * 1.25) ? 'danger' : 'warning';
+                    risk = Math.min(100, Math.round(((value - max) / max) * 100) + 30);
+                } else if (value < min) {
+                    status = 'Faible';
+                    criticClass = (value < min * 0.75) ? 'danger' : 'warning';
+                    risk = Math.min(100, Math.round(((min - value) / min) * 100) + 30);
+                } else {
+                    status = 'Stable';
+                    criticClass = 'normal';
+                    risk = Math.round(Math.random() * 8);
+                }
+
+                return { name, value, ...config, status, criticClass, risk };
+            });
+        }
+
+        function renderAnalysesDashboard() {
+            const grid = document.getElementById('analyses-detail-grid');
+            if (!grid) return;
+
+            let filtered = currentAnalysesList;
+            const search = document.getElementById('search-analysis').value.toLowerCase();
+
+            if (search) filtered = filtered.filter(a => a.name.toLowerCase().includes(search));
+            if (activeAnalysisFilter === 'danger') filtered = filtered.filter(a => a.criticClass === 'danger');
+            if (activeAnalysisFilter === 'warning') filtered = filtered.filter(a => a.criticClass === 'warning');
+
+            filtered.sort((a, b) => b.risk - a.risk);
+
+            grid.innerHTML = filtered.map(a => `
+                <div class="analysis-card animate-[fadeIn_0.3s_ease-out] group">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-slate-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+                                <i class="fas ${a.icon}"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-black text-slate-800 text-sm tracking-tight">${a.name}</h4>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${a.desc}</p>
+                            </div>
+                        </div>
+                        <span class="status-badge critic-${a.criticClass}">
+                            <i class="fas ${a.criticClass === 'normal' ? 'fa-check-circle' : 'fa-biohazard'}"></i>
+                            ${a.status}
+                        </span>
+                    </div>
+                    
+                    <div class="flex items-end justify-between mb-2">
+                        <div>
+                            <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">Résultat</p>
+                            <p class="text-2xl font-black text-slate-900">${a.value} <span class="text-xs font-bold text-slate-400">${a.unit}</span></p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">Référence</p>
+                            <p class="text-xs font-bold text-slate-600">${a.normal[0]} - ${a.normal[1]} ${a.unit}</p>
+                        </div>
+                    </div>
+
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill ${a.criticClass === 'danger' ? 'bg-red-500' : (a.criticClass === 'warning' ? 'bg-amber-500' : 'bg-green-500')}" 
+                             style="width: ${a.risk}%"></div>
+                    </div>
+
+                    <div class="flex items-center gap-3 text-[10px] font-bold ${a.criticClass === 'normal' ? 'text-slate-500' : 'text-slate-800'} bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <i class="fas fa-info-circle text-blue-500"></i>
+                        <span>${a.criticClass === 'normal' ? 'Donnée physiologique optimale.' : (a.criticClass === 'danger' ? 'ALERTE : Seuil de criticité atteint. Intervention requise.' : 'Point de vigilance à réévaluer sous 48h.')}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            updateSummaryStats();
+        }
+
+        function updateSummaryStats() {
+            const normalCount = currentAnalysesList.filter(a => a.criticClass === 'normal').length;
+            const dangerCount = currentAnalysesList.filter(a => a.criticClass === 'danger').length;
+            const warningCount = currentAnalysesList.filter(a => a.criticClass === 'warning').length;
+            const total = currentAnalysesList.length;
+
+            document.getElementById('stats-normal-count').innerText = normalCount;
+            document.getElementById('stats-danger-count').innerText = dangerCount;
+            document.getElementById('stats-normal-bar').style.width = `${(normalCount / total) * 100}%`;
+            document.getElementById('stats-danger-bar').style.width = `${(dangerCount / total) * 100}%`;
+
+            const score = Math.round(100 - (dangerCount * 12 + warningCount * 4));
+            document.getElementById('health-score-value').innerText = score;
+
+            const circle = document.getElementById('score-circle');
+            const circumference = 389.5;
+            const offset = circumference - (score / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+            circle.style.stroke = score > 80 ? '#10b981' : (score > 60 ? '#f59e0b' : '#ef4444');
+
+            const aiSummary = document.getElementById('ai-summary');
+            const dangers = currentAnalysesList.filter(a => a.criticClass === 'danger');
+            if (dangers.length > 0) {
+                aiSummary.innerHTML = `⚠️ <strong class="text-white">Alerte Détectée :</strong> Anomalies significatives sur <span class="underline">${dangers.map(d => d.name).join(', ')}</span>. Une correction thérapeutique est fortement préconisée pour stabiliser le score vital.`;
+            } else {
+                aiSummary.innerHTML = `✅ <strong class="text-white">Bilan Favorable :</strong> Les constantes biologiques sont globalement maîtrisées. Aucun risque immédiat identifié par le moteur d'analyse.`;
+            }
+        }
+
+        function filterAnalyses(type) {
+            activeAnalysisFilter = type;
+            ['all', 'danger', 'warning'].forEach(t => {
+                const btn = document.getElementById(`filter-${t}`);
+                if (t === type) {
+                    btn.classList.add('bg-slate-900', 'text-white');
+                    btn.classList.remove('bg-white', 'text-slate-600');
+                } else {
+                    btn.classList.remove('bg-slate-900', 'text-white');
+                    btn.classList.add('bg-white', 'text-slate-600');
+                }
+            });
+            renderAnalysesDashboard();
+        }
+
+        function closeModal() {
+            document.getElementById('case-modal').classList.remove('active');
+            loadDoctorDashboard();
+        }
+
+        async function sendPrescription() {
+            const text = document.getElementById('prescription-text').value;
+            if (!text) { alert('L\'ordonnance ne peut pas être vide.'); return; }
+            try {
+                await createOrdonnance({
+                    patientId: currentCase.patientId,
+                    medecinId: window.currentUser.medecinId || currentCase.medecinId,
+                    reservationId: currentCase.id,
+                    contenu: text
+                });
+                await updateStatus(currentCase.id, 'ORDONNANCE_PRETE', { prescription: text });
+                alert('Ordonnance signée numériquement et transmise au patient.');
+                closeModal();
+            } catch (err) {
+                alert('Échec de la transmission sécurisée : ' + (err.message || 'Erreur inconnue'));
+                console.error(err);
+            }
+        }
+
+        let currentLang = 'fr';
+        const translations = {
+            fr: { title: 'Vue d\'ensemble', op: 'Système Opérationnel', logout: 'Déconnexion' },
+            en: { title: 'Dashboard Overview', op: 'System Operational', logout: 'Logout' },
+            ar: { title: 'لوحة التحكم العامة', op: 'النظام يعمل بشكل طبيعي', logout: 'تسجيل الخروج' }
+        };
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            const t = translations[lang];
+            document.getElementById('section-title').innerText = t.title;
+            document.getElementById('txt-sys-op').innerText = t.op;
+            document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            alert(lang === 'ar' ? 'تم تغيير اللغة إلى العربية' : `Language changed to ${lang === 'en' ? 'English' : 'French'}`);
+            showSection(activeSection || 'dashboard');
+        }
+
+        let activeSection = 'dashboard';
+        function showSection(id) {
+            activeSection = id;
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            const navBtn = document.getElementById(`nav-${id}`);
+            if (navBtn) navBtn.classList.add('active');
+
+            const sections = ['dashboard', 'analyses', 'patients', 'config', 'security'];
+            sections.forEach(s => {
+                const sec = document.getElementById(`section-${s}`);
+                if (sec) sec.classList.add('hidden');
+            });
+
+            const targetSec = document.getElementById(`section-${id}`);
+            if (targetSec) targetSec.classList.remove('hidden');
+
+            const t = translations[currentLang];
+            const titles = {
+                'dashboard': t.title,
+                'analyses': currentLang === 'ar' ? 'سجل التحاليل' : (currentLang === 'en' ? 'Analyses Registry' : 'Registre Global'),
+                'patients': currentLang === 'ar' ? 'قائمة المرضى' : (currentLang === 'en' ? 'Patient List' : 'Portefeuille Patients'),
+                'config': currentLang === 'ar' ? 'إعدادات العيادة' : (currentLang === 'en' ? 'Clinic Settings' : 'Paramètres du Cabinet'),
+                'security': currentLang === 'ar' ? 'الأمان والخصوصية' : (currentLang === 'en' ? 'Security & Privacy' : 'Sécurité & Confidentialité')
+            };
+            document.getElementById('section-title').innerText = titles[id] || 'MediLog Pro';
+        }
+
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notif-dropdown');
+            dropdown.classList.toggle('hidden');
+            document.getElementById('notif-badge').classList.add('hidden');
+        }
+
+        function clearNotifications() {
+            document.getElementById('notif-list').innerHTML = '<p class="text-center text-slate-400 py-10 text-xs">Aucune notification.</p>';
+        }
+
+        function toggleEmailNotifs() {
+            const toggle = document.getElementById('email-toggle');
+            const isActive = toggle.classList.contains('bg-blue-600');
+            if (isActive) {
+                toggle.classList.replace('bg-blue-600', 'bg-slate-200');
+                toggle.children[0].classList.replace('right-1', 'left-1');
+            } else {
+                toggle.classList.replace('bg-slate-200', 'bg-blue-600');
+                toggle.children[0].classList.replace('left-1', 'right-1');
+            }
+        }
+
+        function handleStampUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById('stamp-preview-img').src = e.target.result;
+                    document.getElementById('stamp-preview-container').classList.remove('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function removeStamp() {
+            document.getElementById('stamp-preview-container').classList.add('hidden');
+            document.getElementById('stamp-input').value = '';
+        }
+
+        let is2FAActive = false;
+        function toggle2FA() {
+            is2FAActive = !is2FAActive;
+            const btn = document.getElementById('btn-2fa');
+            if (is2FAActive) {
+                btn.innerText = 'DÉSACTIVER';
+                btn.classList.replace('bg-slate-900', 'bg-red-500');
+                alert("Double Authentification activée ! Un code SMS sera requis pour votre prochaine connexion.");
+            } else {
+                btn.innerText = 'ACTIVER';
+                btn.classList.replace('bg-red-500', 'bg-slate-900');
+                alert("Double Authentification désactivée.");
+            }
+        }
+
+        function showPatientHistory(patientName) {
+            showSection('analyses');
+            const searchInput = document.querySelector('#section-analyses input');
+            if (searchInput) {
+                searchInput.value = patientName;
+                // Trigger search filter
+                renderAnalyses('all', 'full-analyses-list');
+
+                // Highlight the filtered results
+                searchInput.classList.add('ring-4', 'ring-blue-500/20');
+                setTimeout(() => searchInput.classList.remove('ring-4', 'ring-blue-500/20'), 1500);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = JSON.parse(localStorage.getItem('mediLogUser'));
+            if (user) {
+                window.currentUser = user;
+                const nameSpan = document.getElementById('doctor-name');
+                if (nameSpan) nameSpan.innerText = user.name || user.username || 'Praticien';
+
+                loadDoctorDashboard();
+
+                const userName = user.username || 'Médecin';
+                const navUserInfo = document.getElementById('navbar-user-info');
+                if (navUserInfo) {
+                    navUserInfo.innerHTML = `
+                        <div class="flex items-center gap-4 mb-6 p-4 bg-slate-50 rounded-2xl">
+                            <div class="w-12 h-12 hero-gradient text-white rounded-xl flex items-center justify-center font-black text-xl shadow-lg shadow-blue-200">${userName.substring(0, 2).toUpperCase()}</div>
+                            <div><p class="font-black text-slate-900 text-sm tracking-tight">${userName}</p><p class="text-[9px] text-slate-400 font-black uppercase tracking-widest">Praticien Certifié</p></div>
+                        </div>
+                        <button onclick="logout()" class="w-full py-3 text-red-500 font-bold text-sm hover:bg-red-50 rounded-xl transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-power-off"></i> Déconnexion
+                        </button>
+                    `;
+                }
+            } else {
+                window.location.href = 'index.html';
+            }
+            document.getElementById('search-analysis').addEventListener('input', renderAnalysesDashboard);
+        });
+
+        function logout() { localStorage.removeItem('mediLogUser'); window.location.href = 'login.html'; }
+
+        // ===== MOBILE NAV =====
+        function setMobileNav(el) {
+            document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i => i.classList.remove('active'));
+            if (el) el.classList.add('active');
+        }
+        function openMobileSidebar() {
+            document.getElementById('mobileSidebarOverlay').classList.add('active');
+            document.getElementById('mobileSidebarDrawer').classList.add('open');
+        }
+        function closeMobileSidebar() {
+            document.getElementById('mobileSidebarOverlay').classList.remove('active');
+            document.getElementById('mobileSidebarDrawer').classList.remove('open');
+        }
+
+        if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(e => console.log(e)); }); }
+    </script>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav">
+        <div class="nav-items">
+            <div class="nav-item active" onclick="showSection('dashboard'); setMobileNav(this)"><i
+                    class="fas fa-th-large"></i><span>Accueil</span></div>
+            <div class="nav-item" onclick="showSection('analyses'); setMobileNav(this)"><i
+                    class="fas fa-clipboard-list"></i><span>Dossiers</span></div>
+            <div class="nav-item" onclick="showSection('patients'); setMobileNav(this)"><i
+                    class="fas fa-user-friends"></i><span>Patients</span></div>
+            <div class="nav-item" onclick="showSection('config'); setMobileNav(this)"><i
+                    class="fas fa-cog"></i><span>Config</span></div>
+        </div>
+    </nav>
+
+
+</body>
+
+</html>

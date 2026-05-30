@@ -1,0 +1,95 @@
+{% extends 'delivery/base.html' %}
+
+{% block title %}Historique - MediLog Courier{% endblock %}
+
+{% block page_title %}Historique des Missions{% endblock %}
+{% block page_subtitle %}Consultez vos missions passées et vos revenus cumulés.{% endblock %}
+
+{% block content %}
+<div class="glass-card rounded-3xl overflow-hidden">
+    <div class="p-6 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="relative flex-1 max-w-md">
+            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+            <input type="text" placeholder="Rechercher une mission, un patient..." class="w-full bg-slate-900/50 border border-white/5 rounded-xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-blue-500 transition-all">
+        </div>
+        <div class="flex gap-2">
+            <button class="bg-white/5 hover:bg-white/10 text-xs font-bold px-4 py-2.5 rounded-lg transition-all border border-white/5">
+                <i class="fas fa-filter mr-2"></i> Filtrer
+            </button>
+            <button class="bg-blue-600 hover:bg-blue-500 text-xs font-bold px-4 py-2.5 rounded-lg transition-all shadow-lg shadow-blue-600/20">
+                Exporter (CSV)
+            </button>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="text-[10px] text-slate-500 uppercase tracking-widest bg-white/2">
+                    <th class="px-6 py-4 font-bold">Mission</th>
+                    <th class="px-6 py-4 font-bold">Patient</th>
+                    <th class="px-6 py-4 font-bold">Date & Heure</th>
+                    <th class="px-6 py-4 font-bold">Lieu de livraison</th>
+                    <th class="px-6 py-4 font-bold">Revenu</th>
+                    <th class="px-6 py-4 font-bold">Statut</th>
+                    <th class="px-6 py-4 font-bold text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+                {% for livraison in past_deliveries %}
+                <tr class="group hover:bg-white/2 transition-colors">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-blue-600/10 flex items-center justify-center text-blue-400">
+                                <i class="fas fa-box-medical text-xs"></i>
+                            </div>
+                            <span class="font-bold text-sm">#DX-{{ livraison.id }}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                            <img src="https://ui-avatars.com/api/?name={{ livraison.reservation.patient.get_full_name|default:'Patient' }}&background=6366f1&color=fff" class="w-6 h-6 rounded-full" alt="">
+                            <span class="text-sm font-medium">{{ livraison.reservation.patient.get_full_name|default:livraison.reservation.patient.username }}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-xs text-slate-400">
+                        {{ livraison.completed_at|date:"d M Y" }}<br>
+                        <span class="text-[10px] opacity-60">{{ livraison.completed_at|date:"H:i" }}</span>
+                    </td>
+                    <td class="px-6 py-4 text-xs text-slate-300 max-w-xs truncate">
+                        {{ livraison.reservation.address }}
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-sm font-bold text-green-400">15.00 MAD</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="bg-green-500/10 text-green-500 text-[10px] font-bold px-2 py-0.5 rounded-md border border-green-500/20">Terminé</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <button class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-all mx-auto">
+                            <i class="fas fa-eye text-xs"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="px-6 py-20 text-center opacity-50">
+                        <div class="mb-4 text-3xl">📭</div>
+                        <p class="text-sm">Aucun historique de livraison trouvé.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="p-6 border-t border-white/5 flex items-center justify-between">
+        <p class="text-xs text-slate-500">Affichage de {{ past_deliveries.count }} missions</p>
+        <div class="flex gap-2">
+            <button class="px-3 py-1 bg-white/5 rounded-md text-xs disabled:opacity-50" disabled>Précédent</button>
+            <button class="px-3 py-1 bg-blue-600 rounded-md text-xs">1</button>
+            <button class="px-3 py-1 bg-white/5 rounded-md text-xs">Suivant</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

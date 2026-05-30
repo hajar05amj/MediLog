@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>MediLog Pro - Espace Livreur Premium</title>
+
+    <!-- Force clear old service worker cache -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            if ('caches' in window) {
+                caches.keys().then(names => names.forEach(n => caches.delete(n)));
+            }
+            navigator.serviceWorker.getRegistrations().then(regs => {
+                regs.forEach(r => r.update());
+            });
+        }
+    </script>
+
+    <!-- PWA Support -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="icon-512.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #f1f5f9;
+            color: #1e293b;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: white;
+            border-radius: 2rem;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1rem;
+            border-radius: 1rem;
+            color: #64748b;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .nav-link.active {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        #map {
+            height: 400px;
+            width: 100%;
+            border-radius: 2rem;
+            z-index: 10;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-attente {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-cours {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-livre {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-content {
+            background: #f8fafc;
+            border-radius: 3rem;
+            width: 100%;
+            max-width: 32rem;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .step-btn {
+            width: 100%;
+            padding: 1.5rem;
+            border-radius: 2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            background: #1d4ed8;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            background: #059669;
+        }
+
+        .pin-input {
+            width: 3.5rem;
+            height: 4.5rem;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 1.25rem;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 900;
+            transition: all 0.3s;
+        }
+
+        .pin-input:focus {
+            border-color: #2563eb;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
+            }
+
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 8px 30px rgba(245, 158, 11, 0.7);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-nav {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: white;
+                display: flex;
+                justify-content: space-around;
+                padding: 1rem;
+                border-top: 1px solid #f1f5f9;
+                z-index: 50;
+            }
+
+            .mobile-nav div {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                font-size: 10px;
+                font-weight: 700;
+                color: #64748b;
+            }
+
+            .mobile-nav div.active {
+                color: #2563eb;
+            }
+
+            main {
+                padding-bottom: 5rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50">
+    <div id="app" class="flex flex-col md:flex-row h-screen">
+        <aside class="hidden md:flex flex-col w-72 bg-white border-r border-slate-100 p-6 space-y-8">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="showSection('dashboard')">
+                <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg text-white"><i
+                        class="fas fa-truck-medical text-xl"></i></div>
+                <span class="text-2xl font-bold text-slate-900 hover:text-blue-600 transition-all">MediLog <span
+                        class="text-blue-600">Pro</span></span>
+            </div>
+            <nav class="space-y-1">
+                <div onclick="showSection('dashboard')" id="nav-dashboard" class="nav-link active"><i
+                        class="fas fa-grid-2"></i> Dashboard</div>
+                <div onclick="showSection('courses')" id="nav-courses" class="nav-link"><i class="fas fa-route"></i> Mes
+                    Courses</div>
+            </nav>
+            <div class="mt-auto pt-6 border-t border-slate-100" id="navbar-user-info"></div>
+        </aside>
+
+        <div class="md:hidden mobile-nav">
+            <div onclick="showSection('dashboard')" class="active"><i class="fas fa-home text-xl mb-1"></i>Accueil</div>
+            <div onclick="showSection('courses')"><i class="fas fa-list text-xl mb-1"></i>Missions</div>
+            <div onclick="logout()"><i class="fas fa-power-off text-xl mb-1"></i>Quitter</div>
+        </div>
+
+        <main class="flex-1 overflow-y-auto p-4 md:p-8">
+            <header class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 id="section-title" class="text-2xl font-bold text-slate-900">Dashboard Live</h1>
+                    <p class="text-slate-500 text-sm">Mode Sécurisé • TRS-501</p>
+                </div>
+                <div class="bg-white px-4 py-2 rounded-full shadow-sm border border-slate-100 flex items-center gap-2">
+                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                    <span class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">En Ligne</span>
+                </div>
+            </header>
+
+            <div id="section-dashboard" class="block">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div class="glass-card p-5 border-l-4 border-blue-500">
+                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Missions</p>
+                        <h3 class="text-2xl font-bold text-slate-800" id="stats-count">0</h3>
+                    </div>
+                    <div class="glass-card p-5 border-l-4 border-green-500">
+                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Revenus</p>
+                        <h3 class="text-2xl font-bold text-green-600">145 MAD</h3>
+                    </div>
+                    <div class="glass-card p-5 border-l-4 border-purple-500">
+                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Score</p>
+                        <h3 class="text-2xl font-bold text-purple-600">4.9 ⭐</h3>
+                    </div>
+                    <div class="glass-card p-5 border-l-4 border-amber-500">
+                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Actives</p>
+                        <h3 class="text-2xl font-bold text-amber-600" id="active-count">0</h3>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2 space-y-8">
+                        <div class="glass-card overflow-hidden !p-0 relative shadow-xl">
+                            <div id="map"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold mb-6 flex items-center gap-2 text-slate-800"><i
+                                    class="fas fa-shield-halved text-blue-600"></i> Missions Disponibles</h3>
+                            <div id="requests-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-1">
+                        <div class="glass-card p-8 h-full bg-white flex flex-col border border-blue-100 shadow-xl">
+                            <h3 class="font-bold text-slate-900 mb-8 flex items-center gap-2"><i
+                                    class="fas fa-box text-blue-500"></i> Colis en charge</h3>
+                            <div id="active-mission-widget" class="flex-1"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-courses" class="hidden">
+                <div class="glass-card p-8">
+                    <h3 class="text-xl font-bold mb-8">Historique complet</h3>
+                    <div id="full-history-list" class="space-y-4"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MISSION WORKFLOW MODAL -->
+    <div id="workflow-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="p-8 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+                <div>
+                    <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1" id="workflow-badge">
+                        Dossier PKG-0000</p>
+                    <h2 class="text-xl font-bold" id="workflow-title">Suivi Logistique</h2>
+                </div>
+                <div
+                    class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-xl shadow-inner">
+                    <i class="fas fa-lock"></i>
+                </div>
+            </div>
+            <div class="p-8 space-y-8" id="workflow-body"></div>
+        </div>
+    </div>
+
+    <script src="api.js"></script>
+    <script src="app-common.js"></script>
+    <script>
+        let map, userMarker, destMarker, routePath;
+        let activeMission = null, currentState = 'IDLE', allMissions = [];
+        let simulationInterval = null;
+        let positionSendInterval = null;
+        let routePoints = [];
+        let currentRouteIndex = 0;
+        let useGPS = false;
+        let patientMarker = null, doctorMarker = null;
+
+        function initMap() {
+            const start = [33.5831, -7.6314];
+            if (map) map.remove();
+            map = L.map('map', { zoomControl: false, attributionControl: false }).setView(start, 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+            const icon = L.divIcon({
+                html: '<div style="width:44px;height:44px;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;border:3px solid white;box-shadow:0 6px 20px rgba(245,158,11,0.5);animation:pulse 2s infinite;"><i class="fa-solid fa-motorcycle"></i></div>',
+                className: '', iconSize: [44, 44], iconAnchor: [22, 22]
+            });
+            userMarker = L.marker(start, { icon }).addTo(map);
+
+            // Try enabling GPS
+            if ('geolocation' in navigator) {
+                navigator.geolocation.watchPosition(
+                    (pos) => {
+                        useGPS = true;
+                        const latlng = [pos.coords.latitude, pos.coords.longitude];
+                        userMarker.setLatLng(latlng);
+                    },
+                    () => { useGPS = false; },
+                    { enableHighAccuracy: true, maximumAge: 3000 }
+                );
+            }
+        }
+
+        async function loadMissionMap(mission) {
+            if (!mission || !map) return;
+
+            // Clean previous markers and route
+            if (patientMarker) { map.removeLayer(patientMarker); patientMarker = null; }
+            if (doctorMarker) { map.removeLayer(doctorMarker); doctorMarker = null; }
+            if (routePath) { map.removeLayer(routePath); routePath = null; }
+            if (simulationInterval) { clearInterval(simulationInterval); simulationInterval = null; }
+            if (positionSendInterval) { clearInterval(positionSendInterval); positionSendInterval = null; }
+
+            let token = '';
+            const userJson = localStorage.getItem('mediLogUser');
+            if (userJson) {
+                const uObj = JSON.parse(userJson);
+                token = uObj.token;
+            }
+
+            // Initialize route from API
+            try {
+                const initResp = await fetch(`/tracking/${mission.id}/tracking/init-route/`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Token ${token}`, 'Content-Type': 'application/json' }
+                });
+                if (initResp.ok) {
+                    const initData = await initResp.json();
+                    routePoints = (initData.route || []).map(p => [parseFloat(p[0]), parseFloat(p[1])]);
+                    currentRouteIndex = 0;
+
+                    // Add patient marker
+                    if (initData.patient?.lat) {
+                        const pIcon = L.divIcon({
+                            html: '<div style="width:36px;height:36px;background:linear-gradient(135deg,#10b981,#059669);color:white;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;border:3px solid white;box-shadow:0 4px 15px rgba(16,185,129,0.4);"><i class="fa-solid fa-house"></i></div>',
+                            className: '', iconSize: [36, 36], iconAnchor: [18, 18]
+                        });
+                        patientMarker = L.marker([parseFloat(initData.patient.lat), parseFloat(initData.patient.lng)], { icon: pIcon }).addTo(map)
+                            .bindPopup('<b>🏠 Domicile Patient</b>');
+                    }
+
+                    // Add doctor marker
+                    if (initData.doctor?.lat) {
+                        const dIcon = L.divIcon({
+                            html: '<div style="width:36px;height:36px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:white;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;border:3px solid white;box-shadow:0 4px 15px rgba(59,130,246,0.4);"><i class="fa-solid fa-stethoscope"></i></div>',
+                            className: '', iconSize: [36, 36], iconAnchor: [18, 18]
+                        });
+                        doctorMarker = L.marker([parseFloat(initData.doctor.lat), parseFloat(initData.doctor.lng)], { icon: dIcon }).addTo(map)
+                            .bindPopup(`<b>🏥 ${mission.medecinName || 'Médecin'}</b>`);
+                    }
+
+                    // Set delivery start position
+                    if (initData.delivery?.lat) {
+                        userMarker.setLatLng([parseFloat(initData.delivery.lat), parseFloat(initData.delivery.lng)]);
+                    }
+
+                    // Draw route
+                    if (routePoints.length > 0) {
+                        routePath = L.polyline(routePoints, {
+                            color: '#3b82f6', weight: 6, opacity: 0.8,
+                            dashArray: '10, 10', lineCap: 'round'
+                        }).addTo(map);
+                    }
+
+                    // Fit map to show all markers and route
+                    const allPoints = [userMarker.getLatLng()];
+                    if (initData.patient?.lat) allPoints.push([parseFloat(initData.patient.lat), parseFloat(initData.patient.lng)]);
+                    if (initData.doctor?.lat) allPoints.push([parseFloat(initData.doctor.lat), parseFloat(initData.doctor.lng)]);
+                    if (routePoints.length > 0) allPoints.push(...routePoints);
+                    map.fitBounds(L.latLngBounds(allPoints).pad(0.2));
+                }
+            } catch (e) { console.error('Failed to init route:', e); }
+
+            // Start simulation (moves along route points)
+            startSimulation(mission);
+
+            // Start sending position to backend every 3 seconds
+            positionSendInterval = setInterval(async () => {
+                if (!activeMission) return;
+                const pos = userMarker.getLatLng();
+                try {
+                    await fetch(`/tracking/${activeMission.id}/tracking/update/`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Token ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ lat: pos.lat, lng: pos.lng })
+                    });
+                } catch (e) { }
+            }, 3000);
+        }
+
+        function startSimulation(mission) {
+            if (!routePoints.length || useGPS) return;
+
+            simulationInterval = setInterval(() => {
+                if (currentRouteIndex >= routePoints.length - 1) {
+                    clearInterval(simulationInterval);
+                    return;
+                }
+                currentRouteIndex++;
+                const nextPoint = routePoints[currentRouteIndex];
+                userMarker.setLatLng(nextPoint);
+
+                // Pan map to follow every 3rd point
+                if (currentRouteIndex % 3 === 0) {
+                    map.panTo(nextPoint, { animate: true, duration: 1 });
+                }
+
+                // Update distance display
+                const remaining = routePoints.length - currentRouteIndex;
+                const distEl = document.getElementById('sim-distance');
+                if (distEl) {
+                    const pct = Math.round((currentRouteIndex / routePoints.length) * 100);
+                    distEl.textContent = `${pct}% du trajet`;
+                }
+            }, 2000); // Move every 2 seconds
+        }
+
+        function logout() {
+            localStorage.removeItem('mediLogUser');
+            window.location.href = 'login.html';
+        }
+
+        async function loadDashboard() {
+            allMissions = await getReservations(window.currentUser.role, window.currentUser.id);
+            document.getElementById('stats-count').innerText = allMissions.length;
+            const available = allMissions.filter(r => ['EN_ATTENTE', 'attente'].includes(r.status));
+            document.getElementById('requests-list').innerHTML = available.length === 0 ? '<p class="text-center text-slate-400 py-10">Aucune mission disponible.</p>' : available.map(r => {
+                const mainAddr = r.pickupAddress || r.deliveryAddress || r.address || 'N/A';
+                return `
+                    <div class="glass-card p-6 border-l-4 border-blue-500 hover:shadow-xl transition-all">
+                        <p class="text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-widest">ID: PKG-${20260000 + r.id}</p>
+                        <h4 class="font-bold text-lg mb-4">${r.serviceName || r.service.toUpperCase()}</h4>
+                        <div class="text-xs text-slate-500 space-y-2 mb-6">
+                            <p class="truncate"><i class="fas fa-location-arrow mr-2"></i> ${mainAddr}</p>
+                            <p><i class="fas fa-clock mr-2"></i> Prévu : ${r.time || 'ASAP'}</p>
+                        </div>
+                        <button onclick="startWorkflow(${r.id})" class="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl hover:bg-blue-700 transition-all">Consulter</button>
+                    </div>
+                `;
+            }).join('');
+
+            const activeStatuses = ['COLLECTE_EN_COURS', 'COLLECTE_TERMINEE', 'EN_TRANSIT', 'LIVRE_AU_MEDECIN', 'en_route_collecte', 'collectee', 'transit', 'arrive', 'cours'];
+            activeMission = allMissions.find(r => activeStatuses.includes(r.status));
+
+            if (activeMission) {
+                document.getElementById('active-count').innerText = '1';
+                const statusLabels = {
+                    'COLLECTE_EN_COURS': 'En route vers collecte',
+                    'COLLECTE_TERMINEE': 'Colis collecté',
+                    'EN_TRANSIT': 'En transit',
+                    'LIVRE_AU_MEDECIN': 'Arrivé à destination',
+                    'en_route_collecte': 'En route vers collecte',
+                    'collectee': 'Colis collecté',
+                    'transit': 'En transit',
+                    'arrive': 'Arrivé à destination'
+                };
+                const label = statusLabels[activeMission.status] || 'En cours';
+
+                document.getElementById('active-mission-widget').innerHTML = `
+                    <div class="space-y-6">
+                        <div class="bg-blue-50 p-6 rounded-3xl border border-blue-100">
+                            <p class="text-[10px] font-bold text-blue-600 mb-1 uppercase">Mission PKG-${20260000 + activeMission.id}</p>
+                            <p class="font-bold text-slate-900">${label}</p>
+                        </div>
+                        <button onclick="resumeWorkflow()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
+                            CONTINUER LA MISSION <i class="fas fa-arrow-right text-xs"></i>
+                        </button>
+                    </div>
+                `;
+                // Charger automatiquement la carte avec la mission active
+                setTimeout(() => loadMissionMap(activeMission), 500);
+            } else {
+                document.getElementById('active-count').innerText = '0';
+                document.getElementById('active-mission-widget').innerHTML = '<div class="text-center py-20 text-slate-300 italic text-sm">Aucun colis en charge.</div>';
+            }
+            renderHistoryList();
+        }
+
+        function startWorkflow(id) { activeMission = allMissions.find(r => r.id == id); currentState = 'EN_ATTENTE'; renderWorkflow(); document.getElementById('workflow-modal').classList.add('active'); loadMissionMap(activeMission); }
+        function resumeWorkflow() {
+            if (!activeMission) return;
+
+            // Map DB status to Workflow State
+            if (activeMission.status === 'COLLECTE_EN_COURS' || activeMission.status === 'en_route_collecte') currentState = 'COLLECTE_EN_COURS';
+            else if (activeMission.status === 'COLLECTE_TERMINEE' || activeMission.status === 'collectee') currentState = 'COLLECTE_TERMINEE';
+            else if (activeMission?.status === 'EN_TRANSIT' || activeMission.status === 'transit') currentState = 'EN_TRANSIT';
+            else if (activeMission.status === 'LIVRE_AU_MEDECIN' || activeMission.status === 'arrive') currentState = 'LIVRE_AU_MEDECIN';
+            else currentState = 'EN_ATTENTE';
+
+            renderWorkflow();
+            document.getElementById('workflow-modal').classList.add('active');
+            loadMissionMap(activeMission);
+        }
+
+        function renderWorkflow() {
+            const body = document.getElementById('workflow-body');
+            const pkgId = `PKG-${20260000 + activeMission.id}`;
+            document.getElementById('workflow-badge').innerText = `Dossier ${pkgId}`;
+            let content = '';
+
+            switch (currentState) {
+                case 'EN_ATTENTE':
+                    content = `
+                        <div class="space-y-8 animate-[fadeIn_0.3s_ease-out]">
+                            <div class="bg-blue-50 p-6 rounded-3xl border border-blue-100">
+                                <div class="flex items-center gap-4 mb-4">
+                                    <div class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-lg"><i class="fas fa-location-dot"></i></div>
+                                    <p class="font-black text-slate-900 uppercase text-xs tracking-widest">Collecte</p>
+                                </div>
+                                <p class="text-lg font-bold text-slate-800">${activeMission.pickupAddress || activeMission.address}</p>
+                                <div class="mt-4 flex items-center gap-2 text-amber-600 font-bold text-[10px] uppercase tracking-widest bg-amber-50 px-3 py-1 rounded-full w-fit">
+                                    <i class="fas fa-arrow-right"></i> Destination: ${activeMission.deliveryAddress || activeMission.medecinName || 'Non spécifié'}
+                                </div>
+                            </div>
+                            <button onclick="updateWF('COLLECTE_EN_COURS')" class="step-btn btn-primary">Démarrer la mission <i class="fas fa-play"></i></button>
+                        </div>
+                    `;
+                    break;
+                case 'COLLECTE_EN_COURS':
+                    content = `
+                        <div class="space-y-8 animate-[fadeIn_0.3s_ease-out] text-center">
+                            <div class="w-24 h-24 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto text-4xl animate-pulse"><i class="fas fa-motorcycle"></i></div>
+                            <div>
+                                <h3 class="font-black text-2xl text-slate-900 tracking-tight">En route vers le patient</h3>
+                                <p class="text-slate-500 mt-2 font-medium">Le patient suit votre position en temps réel.</p>
+                                <p id="sim-distance" class="text-blue-600 font-bold mt-2 text-xs uppercase tracking-widest"></p>
+                            </div>
+                            <button onclick="updateWF('COLLECTE_TERMINEE')" class="step-btn btn-primary">Je suis arrivé <i class="fas fa-location-crosshairs"></i></button>
+                        </div>
+                    `;
+                    break;
+                case 'COLLECTE_TERMINEE':
+                    content = `
+                        <div class="space-y-10 animate-[fadeIn_0.3s_ease-out] text-center">
+                            <div class="w-32 h-32 bg-blue-100 text-blue-600 rounded-[2.5rem] flex items-center justify-center mx-auto text-5xl shadow-xl shadow-blue-100/50">
+                                <i class="fas fa-box-archive"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-black text-2xl text-slate-900 tracking-tight">Récupération Colis</h3>
+                                <p class="text-slate-500 mt-2 font-medium">Vérifiez le colis avant de confirmer</p>
+                            </div>
+                            <button onclick="updateWF('EN_TRANSIT')" class="step-btn btn-success">Confirmer la collecte <i class="fas fa-check-circle"></i></button>
+                        </div>
+                    `;
+                    break;
+                case 'EN_TRANSIT':
+                    content = `
+                        <div class="space-y-8 animate-[fadeIn_0.3s_ease-out] text-center">
+                            <div class="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto text-4xl shadow-xl shadow-green-100/50"><i class="fas fa-box-open"></i></div>
+                            <div>
+                                <h3 class="font-black text-2xl text-slate-900 tracking-tight">Colis en transit</h3>
+                                <p class="text-slate-500 mt-2 font-medium">Direction : Laboratoire Central / Médecin</p>
+                                <p id="sim-distance" class="text-green-600 font-bold mt-2 text-xs uppercase tracking-widest"></p>
+                            </div>
+                            <button onclick="updateWF('LIVRE_AU_MEDECIN')" class="step-btn btn-primary">Arrivé à destination <i class="fas fa-map-pin"></i></button>
+                        </div>
+                    `;
+                    break;
+                case 'LIVRE_AU_MEDECIN':
+                    content = `
+                        <div class="space-y-8 animate-[fadeIn_0.3s_ease-out]">
+                            <div class="text-center">
+                                <h3 class="font-black text-2xl text-slate-900 tracking-tight">Validation Livraison</h3>
+                                <p class="text-slate-500 mt-2 font-medium">Saisissez le code PIN pour confirmer</p>
+                            </div>
+                            <div class="flex gap-4 justify-center">
+                                ${[1, 2, 3, 4].map(i => `<input type="password" id="pin-${i}" maxlength="1" onkeyup="movePinFocus(${i})" class="pin-input">`).join('')}
+                            </div>
+                            <div class="bg-blue-50 p-6 rounded-3xl border border-blue-100 flex items-center gap-4">
+                                <i class="fas fa-shield-check text-2xl text-blue-600"></i>
+                                <p class="text-[10px] font-bold text-blue-700 uppercase tracking-widest leading-relaxed">Cette étape garantit que le colis est remis en main propre.</p>
+                            </div>
+                            <button onclick="finalize()" class="step-btn btn-success">Valider la remise <i class="fas fa-handshake-angle"></i></button>
+                        </div>
+                    `;
+                    break;
+            }
+            // Logic for Receipt display
+            const receiptUrl = activeMission.receiptUrl ? `/reservations/${activeMission.id}/receipt/` : null;
+            let receiptContent = '';
+
+            if (receiptUrl) {
+                // Check if it's likely an image based on the original URL from API
+                const isImage = activeMission.receiptUrl.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)$/);
+                
+                if (isImage) {
+                    receiptContent = `
+                        <div class="space-y-4">
+                            <div class="relative group">
+                                <img src="${receiptUrl}" class="rounded-3xl shadow-md max-h-64 w-full object-contain bg-white border border-slate-100 group-hover:shadow-xl transition-all" alt="Reçu patient">
+                                <div onclick="window.open('${receiptUrl}', '_blank')" class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all cursor-pointer rounded-3xl">
+                                    <i class="fas fa-search-plus text-white text-3xl"></i>
+                                </div>
+                            </div>
+                            <p class="text-center text-[10px] font-bold text-slate-400 uppercase">Cliquez pour agrandir</p>
+                        </div>
+                    `;
+                } else {
+                    receiptContent = `
+                        <a href="${receiptUrl}" target="_blank" class="flex items-center gap-4 p-4 bg-blue-50/50 border border-blue-100 rounded-3xl hover:bg-blue-50 transition-all group">
+                            <div class="w-12 h-12 bg-white text-blue-600 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-all">
+                                <i class="fas fa-file-invoice text-xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-black text-slate-900 uppercase tracking-tight">Consulter le reçu</p>
+                                <p class="text-[10px] text-slate-400 font-bold">Document PDF</p>
+                            </div>
+                            <div class="w-8 h-8 bg-white text-slate-300 rounded-full flex items-center justify-center group-hover:text-blue-600 group-hover:bg-blue-100 transition-all">
+                                <i class="fas fa-chevron-right text-xs"></i>
+                            </div>
+                        </a>
+                    `;
+                }
+            } else {
+                receiptContent = `
+                    <div class="p-6 bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl text-center">
+                        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Aucun reçu fourni</p>
+                    </div>
+                `;
+            }
+
+            const receiptSection = `
+                <div class="mt-8 pt-8 border-t border-slate-100">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Reçu du patient</p>
+                    ${receiptContent}
+                </div>
+            `;
+
+            body.innerHTML = content + receiptSection;
+        }
+
+        function movePinFocus(i) {
+            if (i < 4) document.getElementById(`pin-${i + 1}`).focus();
+        }
+
+        async function updateWF(state) {
+            try {
+                currentState = state;
+                let dbStatus = state;
+
+                await updateStatus(activeMission.id, dbStatus, {
+                    event: state,
+                    timestamp: new Date().toISOString(),
+                    location: userMarker ? userMarker.getLatLng() : null
+                });
+
+                renderWorkflow();
+                loadDashboard();
+            } catch (err) {
+                console.error("Workflow update error:", err);
+                alert("Erreur lors de la mise à jour : " + err.message);
+            }
+        }
+
+        async function finalize() {
+            const pin = [1, 2, 3, 4].map(i => document.getElementById(`pin-${i}`).value).join('');
+            if (pin.length < 4) { alert('PIN incomplet'); return; }
+
+            await updateStatus(activeMission.id, 'LIVRE_AU_MEDECIN', {
+                event: 'LIVRAISON_CONFIRMÉE',
+                pin: pin,
+                timestamp: new Date().toISOString()
+            });
+
+            document.getElementById('workflow-modal').classList.remove('active');
+            loadDashboard();
+        }
+
+        function showSection(s) {
+            document.querySelectorAll('.nav-link, .mobile-nav div').forEach(l => l.classList.remove('active'));
+            document.getElementById(`nav-${s}`)?.classList.add('active');
+            document.getElementById('section-dashboard').style.display = s === 'dashboard' ? 'block' : 'none';
+            document.getElementById('section-courses').style.display = s === 'courses' ? 'block' : 'none';
+            if (s === 'dashboard' && map) setTimeout(() => map.invalidateSize(), 200);
+        }
+
+        function renderHistoryList() {
+            const list = document.getElementById('full-history-list');
+            const history = allMissions.filter(m => ['TERMINE', 'LIVRE_AU_MEDECIN', 'livre', 'arrive'].includes(m.status)).sort((a, b) => b.id - a.id);
+            list.innerHTML = history.length === 0 ? '<p class="text-center text-slate-400">Aucun historique.</p>' : history.map(r => `
+                <div class="flex items-center justify-between p-5 bg-white border border-slate-100 rounded-3xl">
+                    <div class="flex items-center gap-5">
+                        <div class="w-12 h-12 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center text-xl"><i class="fas fa-check-circle"></i></div>
+                        <div><p class="font-bold text-slate-900">PKG-${20260000 + r.id}</p><p class="text-[10px] text-slate-400 uppercase tracking-widest">${r.date} • ${r.serviceName}</p></div>
+                    </div>
+                    <span class="status-badge status-livre">LIVRÉ</span>
+                </div>
+            `).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initMap();
+            if (window.currentUser) {
+                loadDashboard();
+                const userName = window.currentUser.username || 'Coursier';
+                document.getElementById('navbar-user-info').innerHTML = `
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center font-bold text-xl">${userName.substring(0, 2).toUpperCase()}</div>
+                        <div><p class="font-bold text-slate-900">${userName}</p><p class="text-[10px] text-slate-400 font-bold">TRS-501</p></div>
+                    </div>
+                    <button onclick="logout()" class="w-full py-3 text-red-500 font-bold text-sm hover:bg-red-50 rounded-xl transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-power-off"></i> Déconnexion
+                    </button>
+                `;
+            }
+        });
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(e => console.log(e)); }); }
+    </script>
+</body>
+
+</html>

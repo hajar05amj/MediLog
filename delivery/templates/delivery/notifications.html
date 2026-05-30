@@ -1,0 +1,74 @@
+{% extends 'delivery/base.html' %}
+
+{% block title %}Notifications - MediLog Courier{% endblock %}
+
+{% block page_title %}Centre de Notifications{% endblock %}
+{% block page_subtitle %}Restez informé des mises à jour de vos missions et de la plateforme.{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+    <div class="flex items-center justify-between mb-4 px-2">
+        <h3 class="font-bold">Récent</h3>
+        <button class="text-xs text-blue-400 hover:underline">Tout marquer comme lu</button>
+    </div>
+
+    {% for notif in notifications %}
+    <div class="glass-card rounded-3xl p-5 flex gap-4 hover:bg-white/5 transition-all group relative overflow-hidden">
+        {% if not notif.is_read %}
+        <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+        {% endif %}
+        
+        <div class="w-12 h-12 rounded-2xl bg-blue-600/10 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
+            <i class="fas {% if 'livraison' in notif.title|lower %}fa-truck{% else %}fa-bell{% endif %}"></i>
+        </div>
+        
+        <div class="flex-1">
+            <div class="flex items-center justify-between mb-1">
+                <h5 class="font-bold text-sm {% if not notif.is_read %}text-white{% else %}text-slate-400{% endif %}">{{ notif.title }}</h5>
+                <span class="text-[10px] text-slate-500">{{ notif.created_at|timesince }} ago</span>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed">{{ notif.message }}</p>
+        </div>
+        
+        <button class="self-center w-8 h-8 rounded-lg hover:bg-white/5 flex items-center justify-center text-slate-600 hover:text-slate-400 transition-all">
+            <i class="fas fa-ellipsis-v text-xs"></i>
+        </button>
+    </div>
+    {% empty %}
+    <div class="text-center py-20 glass-card rounded-3xl opacity-50">
+        <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-600">
+            <i class="fas fa-bell-slash"></i>
+        </div>
+        <p class="text-sm">Vous n'avez pas encore de notifications.</p>
+    </div>
+    {% endfor %}
+
+    <!-- Demo notifications if empty -->
+    {% if not notifications %}
+    <div class="glass-card rounded-3xl p-5 flex gap-4 opacity-70">
+        <div class="w-12 h-12 rounded-2xl bg-green-600/10 flex items-center justify-center text-green-400">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="flex-1">
+            <div class="flex items-center justify-between mb-1">
+                <h5 class="font-bold text-sm">Compte validé</h5>
+                <span class="text-[10px] text-slate-500">Il y a 2h</span>
+            </div>
+            <p class="text-xs text-slate-400">Votre profil de livreur a été approuvé par l'administration. Vous pouvez maintenant accepter des missions.</p>
+        </div>
+    </div>
+    <div class="glass-card rounded-3xl p-5 flex gap-4 opacity-70">
+        <div class="w-12 h-12 rounded-2xl bg-blue-600/10 flex items-center justify-center text-blue-400">
+            <i class="fas fa-info-circle"></i>
+        </div>
+        <div class="flex-1">
+            <div class="flex items-center justify-between mb-1">
+                <h5 class="font-bold text-sm">Bienvenue sur MediLog</h5>
+                <span class="text-[10px] text-slate-500">Il y a 5h</span>
+            </div>
+            <p class="text-xs text-slate-400">Prêt à transformer la logistique médicale ? Consultez notre guide de démarrage rapide.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

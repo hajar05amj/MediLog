@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediLog - Connexion Premium</title>
+    
+    <!-- PWA Support -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="icon-512.png">
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        medical: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        },
+                        accent: {
+                            500: '#10b981',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+        .auth-bg {
+            background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.1), transparent),
+                        radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.1), transparent);
+        }
+        .form-input {
+            @apply w-full px-4 py-3 rounded-xl border border-slate-200 bg-white/50 focus:bg-white focus:ring-4 focus:ring-medical-100 focus:border-medical-600 transition-all outline-none text-slate-700;
+        }
+        .tab-btn {
+            @apply py-2 px-4 text-sm font-bold transition-all border-b-2;
+        }
+        .tab-active {
+            @apply border-medical-600 text-medical-600;
+        }
+        .tab-inactive {
+            @apply border-transparent text-slate-400 hover:text-slate-600;
+        }
+    </style>
+</head>
+<body class="font-sans text-slate-800 antialiased auth-bg min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-4xl w-full grid lg:grid-cols-2 bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100">
+        
+        <!-- Left Side: Branding/Info -->
+        <div class="hidden lg:flex flex-col justify-between p-12 bg-medical-600 text-white relative overflow-hidden">
+            <div class="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-64 h-64 bg-accent-500/20 rounded-full blur-3xl"></div>
+            
+            <div class="relative z-10">
+                <div class="flex items-center gap-2 mb-12">
+                    <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-medical-600 text-xl shadow-lg">
+                        <i class="fa-solid fa-truck-medical"></i>
+                    </div>
+                    <span class="text-2xl font-bold tracking-tight">MediLog</span>
+                </div>
+                
+                <h2 class="text-4xl font-bold mb-6 leading-tight">La santé de vos proches, <br> notre priorité.</h2>
+                <p class="text-white/80 text-lg leading-relaxed mb-8">Rejoignez la première plateforme marocaine de logistique médicale e-santé.</p>
+                
+                <div class="space-y-6">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"><i class="fa-solid fa-shield-halved"></i></div>
+                        <p class="font-medium text-sm">Données sécurisées et chiffrées</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center"><i class="fa-solid fa-clock"></i></div>
+                        <p class="font-medium text-sm">Suivi en temps réel 24h/24</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="relative z-10 pt-8 border-t border-white/10">
+                <p class="text-xs text-white/60 uppercase tracking-widest font-bold">Plateforme certifiée</p>
+            </div>
+        </div>
+
+        <!-- Right Side: Form -->
+        <div class="p-8 md:p-12">
+            <div class="flex items-center justify-between mb-10">
+                <div class="flex gap-4" id="authTabs">
+                    <button onclick="switchTab('login')" id="loginTab" class="tab-btn tab-active">Se connecter</button>
+                    <button onclick="switchTab('signup')" id="signupTab" class="tab-btn tab-inactive">S'inscrire</button>
+                </div>
+                <a href="index.html" class="text-slate-400 hover:text-slate-600 transition-colors text-xl"><i class="fa-solid fa-xmark"></i></a>
+            </div>
+
+            <div id="loginFormArea">
+                <h3 class="text-2xl font-bold text-slate-900 mb-2">Bon retour parmi nous</h3>
+                <p class="text-slate-500 mb-8 font-medium">Accédez à votre espace MediLog sécurisé.</p>
+
+                <form id="loginForm" class="space-y-5">
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-slate-700 ml-1">Nom d'utilisateur</label>
+                        <input type="text" id="username" class="form-input" placeholder="patient, medecin ou livreur" required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-slate-700 ml-1">Mot de passe</label>
+                        <input type="password" id="password" class="form-input" placeholder="••••••••" required>
+                    </div>
+                    
+                    <div class="flex items-center justify-between py-2">
+                        <label class="flex items-center gap-2 cursor-pointer group">
+                            <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-medical-600 focus:ring-medical-600">
+                            <span class="text-sm text-slate-500 font-medium group-hover:text-slate-700">Se souvenir de moi</span>
+                        </label>
+                        <a href="#" class="text-sm font-bold text-medical-600 hover:text-medical-700">Oublié ?</a>
+                    </div>
+
+                    <button type="submit" class="w-full bg-medical-600 text-white py-4 rounded-xl font-bold hover:bg-medical-700 transition-all shadow-xl shadow-medical-600/20 active:scale-95 flex items-center justify-center gap-2">
+                        Se connecter
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </button>
+                </form>
+            </div>
+
+            <div id="signupFormArea" class="hidden">
+                <h3 class="text-2xl font-bold text-slate-900 mb-2">Créer un compte</h3>
+                <p class="text-slate-500 mb-8 font-medium">Rejoignez MediLog gratuitement aujourd'hui.</p>
+
+                <form id="signupForm" class="space-y-5">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="text-sm font-bold text-slate-700 ml-1 text-xs">Prénom</label>
+                            <input type="text" id="signupFirstName" class="form-input" placeholder="Ahmed" required>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-bold text-slate-700 ml-1 text-xs">Nom</label>
+                            <input type="text" id="signupLastName" class="form-input" placeholder="Bennani" required>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-slate-700 ml-1">Email</label>
+                        <input type="email" id="signupEmail" class="form-input" placeholder="ahmed@example.com" required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-slate-700 ml-1">Mot de passe</label>
+                        <input type="password" id="signupPassword" class="form-input" placeholder="••••••••" required>
+                    </div>
+
+                    <button type="submit" class="w-full bg-medical-600 text-white py-4 rounded-xl font-bold hover:bg-medical-700 transition-all shadow-xl shadow-medical-600/20 active:scale-95">
+                        Créer mon compte
+                    </button>
+                </form>
+            </div>
+
+            <!-- Social Login -->
+            <div class="mt-10">
+                <div class="relative mb-10 text-center">
+                    <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-100"></div></div>
+                    <span class="relative bg-white px-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Ou continuer avec</span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <button class="flex items-center justify-center gap-3 py-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-all font-bold text-slate-600 text-sm">
+                        <img src="https://www.svgrepo.com/show/355037/google.svg" class="w-5 h-5">
+                        Google
+                    </button>
+                    <button class="flex items-center justify-center gap-3 py-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-all font-bold text-slate-600 text-sm">
+                        <i class="fa-brands fa-apple text-xl text-black"></i>
+                        Apple
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="api.js"></script>
+    <script>
+        function switchTab(tab) {
+            const loginArea = document.getElementById('loginFormArea');
+            const signupArea = document.getElementById('signupFormArea');
+            const loginTab = document.getElementById('loginTab');
+            const signupTab = document.getElementById('signupTab');
+
+            if (tab === 'login') {
+                loginArea.classList.remove('hidden');
+                signupArea.classList.add('hidden');
+                loginTab.className = 'tab-btn tab-active';
+                signupTab.className = 'tab-btn tab-inactive';
+            } else {
+                loginArea.classList.add('hidden');
+                signupArea.classList.remove('hidden');
+                loginTab.className = 'tab-btn tab-inactive';
+                signupTab.className = 'tab-btn tab-active';
+            }
+        }
+
+        // Logic for redirection after login
+        const redirectUrl = sessionStorage.getItem('postLoginRedirect') || 'index.html';
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const u = document.getElementById('username').value.trim();
+            const p = document.getElementById('password').value.trim();
+
+            try {
+                const res = await login(u, p);
+                if (res.success) {
+                    const userData = res.user;
+                    userData.token = res.token;
+                    localStorage.setItem('mediLogUser', JSON.stringify(userData));
+                    
+                    // Always redirect to dashboard based on role (with cache-busting timestamp)
+                    window.location.href = `dashboard-${res.user.role}.html?v=${new Date().getTime()}`;
+                } else {
+                    alert(res.message || 'Identifiants incorrects');
+                }
+            } catch (err) {
+                alert('Erreur de connexion au serveur.');
+            }
+        });
+
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value.trim();
+            const firstName = document.getElementById('signupFirstName').value.trim();
+            const lastName = document.getElementById('signupLastName').value.trim();
+
+            const data = {
+                email: email,
+                password: password,
+                nom: firstName + ' ' + lastName,
+                role: 'patient', // Default role for signup
+                pack: new URLSearchParams(window.location.search).get('pack') || 'junior'
+            };
+
+            try {
+                const res = await register(data);
+                if (res.success) {
+                    alert("Compte créé avec succès !");
+                    const userData = res.user;
+                    userData.token = res.token;
+                    localStorage.setItem('mediLogUser', JSON.stringify(userData));
+                    window.location.href = 'dashboard-patient.html';
+                } else {
+                    alert(res.message || "Erreur lors de la création du compte.");
+                }
+            } catch (err) {
+                alert("Erreur serveur.");
+            }
+        });
+
+        // Pack Logic: Auto-switch to signup if pack is in URL
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('pack')) {
+                switchTab('signup');
+            }
+        });
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(e => console.log(e));
+            });
+        }
+    </script>
+</body>
+</html>

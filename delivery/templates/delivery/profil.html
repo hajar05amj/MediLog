@@ -1,0 +1,119 @@
+{% extends 'delivery/base.html' %}
+
+{% block title %}Profil - MediLog Courier{% endblock %}
+
+{% block page_title %}Mon Profil Professionnel{% endblock %}
+{% block page_subtitle %}Gérez vos informations personnelles et votre véhicule.{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+    <div class="glass-card rounded-3xl p-8 relative overflow-hidden">
+        <!-- Background Decoration -->
+        <div class="absolute top-0 right-0 w-64 h-64 bg-blue-600/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
+        
+        <div class="flex flex-col md:flex-row gap-8 items-center relative z-10">
+            <div class="relative group">
+                <img src="{% if livreur.photo %}{{ livreur.photo.url }}{% else %}https://ui-avatars.com/api/?name={{ user.get_full_name|default:user.username }}&background=3b82f6&color=fff&size=200{% endif %}" class="w-40 h-40 rounded-3xl object-cover shadow-2xl border-4 border-white/5" alt="Profile Photo">
+                <button class="absolute bottom-4 right-4 w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-xl opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                    <i class="fas fa-camera"></i>
+                </button>
+            </div>
+            
+            <div class="flex-1 text-center md:text-left">
+                <div class="flex flex-col md:flex-row md:items-center gap-4 mb-2">
+                    <h3 class="text-3xl font-bold">{{ user.get_full_name|default:user.username }}</h3>
+                    <span class="status-badge status-online mx-auto md:mx-0">Vérifié ✓</span>
+                </div>
+                <p class="text-slate-400 mb-6">Inscrit depuis {{ user.date_joined|date:"M Y" }} • {{ livreur.livraisons.count }} missions terminées</p>
+                
+                <div class="flex flex-wrap justify-center md:justify-start gap-4">
+                    <div class="px-4 py-2 bg-slate-900/50 rounded-xl border border-white/5 text-center min-w-[100px]">
+                        <p class="text-[10px] text-slate-500 uppercase font-bold">Score</p>
+                        <p class="font-bold text-amber-400">4.92</p>
+                    </div>
+                    <div class="px-4 py-2 bg-slate-900/50 rounded-xl border border-white/5 text-center min-w-[100px]">
+                        <p class="text-[10px] text-slate-500 uppercase font-bold">Niveau</p>
+                        <p class="font-bold text-blue-400">Elite</p>
+                    </div>
+                    <div class="px-4 py-2 bg-slate-900/50 rounded-xl border border-white/5 text-center min-w-[100px]">
+                        <p class="text-[10px] text-slate-500 uppercase font-bold">Vitesse</p>
+                        <p class="font-bold text-green-400">Rapide</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Personal Info -->
+        <div class="glass-card rounded-3xl p-6">
+            <h4 class="font-bold mb-6 flex items-center gap-2">
+                <i class="fas fa-id-card text-blue-400"></i>
+                Informations Personnelles
+            </h4>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] text-slate-500 uppercase font-bold mb-1 block">Nom Complet</label>
+                    <p class="text-sm font-medium border-b border-white/5 pb-2">{{ user.get_full_name|default:"Non spécifié" }}</p>
+                </div>
+                <div>
+                    <label class="text-[10px] text-slate-500 uppercase font-bold mb-1 block">Email</label>
+                    <p class="text-sm font-medium border-b border-white/5 pb-2">{{ user.email }}</p>
+                </div>
+                <div>
+                    <label class="text-[10px] text-slate-500 uppercase font-bold mb-1 block">Téléphone</label>
+                    <p class="text-sm font-medium border-b border-white/5 pb-2">{{ livreur.phone }}</p>
+                </div>
+                <div>
+                    <label class="text-[10px] text-slate-500 uppercase font-bold mb-1 block">Numéro CIN</label>
+                    <p class="text-sm font-medium border-b border-white/5 pb-2">{{ livreur.cin }}</p>
+                </div>
+            </div>
+            <button class="w-full mt-6 bg-white/5 hover:bg-white/10 text-white font-bold py-3 rounded-xl transition-all border border-white/5">
+                Modifier mes infos
+            </button>
+        </div>
+
+        <!-- Vehicle Info -->
+        <div class="glass-card rounded-3xl p-6">
+            <h4 class="font-bold mb-6 flex items-center gap-2">
+                <i class="fas fa-motorcycle text-blue-400"></i>
+                Véhicule & Statut
+            </h4>
+            <div class="space-y-6">
+                <div class="p-4 bg-slate-900/50 rounded-2xl border border-white/5">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-blue-600/10 rounded-xl flex items-center justify-center text-blue-400">
+                            <i class="fas fa-car-side"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-500 uppercase font-bold">Type de véhicule</p>
+                            <p class="font-bold">{{ livreur.vehicule }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between p-4 bg-slate-900/50 rounded-2xl border border-white/5">
+                    <div>
+                        <p class="text-sm font-bold mb-1">Disponibilité</p>
+                        <p class="text-xs text-slate-500">Activé pour recevoir des missions</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" checked class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+
+                <div class="space-y-3">
+                    <p class="text-xs text-slate-500 font-medium">Documents vérifiés:</p>
+                    <div class="flex gap-2">
+                        <span class="text-[10px] bg-green-500/10 text-green-400 px-2 py-1 rounded-md border border-green-500/20">Permis de conduire</span>
+                        <span class="text-[10px] bg-green-500/10 text-green-400 px-2 py-1 rounded-md border border-green-500/20">Assurance</span>
+                        <span class="text-[10px] bg-green-500/10 text-green-400 px-2 py-1 rounded-md border border-green-500/20">CIN</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediLog - Confirmation de Réservation</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        @keyframes scaleIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-scale-in { animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        
+        .success-bg {
+            background: radial-gradient(circle at center, rgba(16, 185, 129, 0.05), transparent);
+        }
+    </style>
+</head>
+<body class="font-sans text-slate-800 bg-slate-50 min-h-screen flex items-center justify-center p-6 success-bg">
+
+    <div class="max-w-xl w-full text-center" data-aos="fade-up">
+        
+        <div class="mb-10 flex justify-center">
+            <div class="w-24 h-24 bg-accent-500 rounded-full flex items-center justify-center text-white text-5xl shadow-2xl shadow-accent-500/30 animate-scale-in">
+                <i class="fa-solid fa-check"></i>
+            </div>
+        </div>
+
+        <h1 class="text-4xl font-bold text-slate-900 mb-4 tracking-tight">Votre réservation est confirmée !</h1>
+        <p class="text-xl text-slate-500 mb-12">Merci de faire confiance à MediLog. Nos coursiers sont déjà prévenus.</p>
+
+        <div class="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl mb-12 text-left">
+            <div class="flex justify-between items-center mb-6 pb-6 border-b border-slate-50">
+                <div>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Numéro de mission</p>
+                    <p id="missionId" class="text-xl font-bold text-slate-800 font-mono"></p>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Statut</p>
+                    <span class="px-3 py-1 rounded-full bg-blue-100 text-blue-600 text-xs font-bold uppercase tracking-wider">En attente</span>
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400">
+                        <i class="fa-solid fa-truck-fast"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-slate-700">Attribution du coursier</p>
+                        <p class="text-xs text-slate-400 font-medium italic">En cours de traitement...</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-slate-700">Suivi en direct</p>
+                        <p class="text-xs text-slate-400 font-medium">Sera disponible dès le départ du coursier.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4">
+            <button onclick="window.location.href='dashboard-patient.html'" class="flex-1 bg-medical-600 text-white py-5 rounded-2xl font-bold hover:bg-medical-700 transition-all shadow-xl shadow-medical-600/20 active:scale-95 flex items-center justify-center gap-2">
+                Accéder au Dashboard
+                <i class="fa-solid fa-chart-line"></i>
+            </button>
+            <button onclick="window.location.href='index.html'" class="flex-1 bg-white text-slate-700 py-5 rounded-2xl font-bold border border-slate-200 hover:bg-slate-50 transition-all">
+                Retour à l'accueil
+            </button>
+        </div>
+        
+        <p class="mt-12 text-slate-400 text-sm font-medium">Un email de confirmation vous a été envoyé.</p>
+    </div>
+
+    <script>
+        // Set mission ID from session
+        document.getElementById('missionId').innerText = sessionStorage.getItem('lastMissionId') || '#ML-4920';
+
+        // Trigger Confetti
+        window.onload = () => {
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#2563eb', '#10b981', '#ffffff']
+            });
+        };
+    </script>
+</body>
+</html>

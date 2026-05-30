@@ -1,0 +1,19 @@
+{
+  "name": "MediLog - Logistique Médicale Premium",
+  "short_name": "MediLog",
+  "description": "Votre santé, livrée en toute sécurité. Transport médical et livraison de résultats au Maroc.",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["medical", "health", "logistics"]
+}

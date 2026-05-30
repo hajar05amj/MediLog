@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediLog | Admin Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --medical-600: #2563eb;
+            --medical-700: #1d4ed8;
+            --accent-500: #10b981;
+            --slate-900: #0f172a;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+        }
+
+        .sidebar-link.active {
+            background: linear-gradient(135deg, var(--medical-600), var(--medical-700));
+            color: white;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.05);
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+
+        .pulse-live {
+            position: relative;
+        }
+        .pulse-live::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -15px;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: translateY(-50%) scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: translateY(-50%) scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: translateY(-50%) scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        /* Status Colors */
+        .status-attente { background: #fee2e2; color: #991b1b; }
+        .status-cours { background: #fef3c7; color: #92400e; }
+        .status-livre { background: #dcfce7; color: #166534; }
+    </style>
+</head>
+<body class="flex min-h-screen">
+
+    <!-- Sidebar -->
+    <aside class="w-72 bg-white border-r border-slate-100 flex flex-col sticky top-0 h-screen z-50">
+        <div class="p-8 mb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-medical-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                    <i class="fa-solid fa-shield-halved text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black text-slate-900 tracking-tighter">MediLog</h1>
+                    <p class="text-[10px] font-bold text-medical-600 uppercase tracking-widest">Admin Center</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
+            <button onclick="showSection('overview')" id="nav-overview" class="sidebar-link active w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-slate-500 font-bold transition-all hover:bg-slate-50">
+                <i class="fa-solid fa-chart-pie"></i> Vue d'ensemble
+            </button>
+            
+            <div class="pt-4 pb-2 px-6">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Utilisateurs</p>
+            </div>
+            <button onclick="showSection('patients')" id="nav-patients" class="sidebar-link w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-slate-500 font-bold transition-all hover:bg-slate-50">
+                <i class="fa-solid fa-hospital-user"></i> Patients
+            </button>
+            <button onclick="showSection('livreurs')" id="nav-livreurs" class="sidebar-link w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-slate-500 font-bold transition-all hover:bg-slate-50">
+                <i class="fa-solid fa-truck-fast"></i> Livreurs
+            </button>
+            <button onclick="showSection('medecins')" id="nav-medecins" class="sidebar-link w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-slate-500 font-bold transition-all hover:bg-slate-50">
+                <i class="fa-solid fa-user-doctor"></i> Médecins
+            </button>
+
+            <div class="pt-4 pb-2 px-6">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Opérations</p>
+            </div>
+            <button onclick="showSection('orders')" id="nav-orders" class="sidebar-link w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-slate-500 font-bold transition-all hover:bg-slate-50">
+                <i class="fa-solid fa-clipboard-list"></i> Commandes
+            </button>
+            <button onclick="showSection('services')" id="nav-services" class="sidebar-link w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-slate-500 font-bold transition-all hover:bg-slate-50">
+                <i class="fa-solid fa-flask-vial"></i> Services
+            </button>
+
+        </nav>
+
+        <div class="p-6 border-t border-slate-100">
+            <div class="bg-slate-50 p-4 rounded-2xl flex items-center gap-4 mb-4">
+                <img src="https://ui-avatars.com/api/?name=Admin+Log&background=0f172a&color=fff" class="w-10 h-10 rounded-xl shadow-sm" alt="Admin Avatar">
+                <div class="overflow-hidden">
+                    <p class="text-xs font-bold text-slate-900 truncate" id="adminName">Super Admin</p>
+                    <p class="text-[10px] font-medium text-slate-400">Administrateur</p>
+                </div>
+            </div>
+            <button onclick="logout()" class="w-full py-3 text-red-500 font-bold text-sm hover:bg-red-50 rounded-xl transition-all flex items-center justify-center gap-2">
+                <i class="fa-solid fa-power-off"></i> Déconnexion
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col min-w-0">
+        <!-- Navbar -->
+        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-slate-100 px-10 flex items-center justify-between sticky top-0 z-40">
+            <div class="flex items-center gap-8 flex-1">
+                <h2 class="text-xl font-bold text-slate-900" id="sectionTitle">Tableau de Bord</h2>
+                <div class="relative w-96 hidden md:block">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" placeholder="Rechercher un utilisateur, une commande..." class="w-full pl-12 pr-4 py-2 bg-slate-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-medical-600 transition-all">
+                </div>
+            </div>
+
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-2 px-4 py-2 bg-accent-500/10 text-accent-500 rounded-full">
+                    <div class="w-2 h-2 bg-accent-500 rounded-full animate-pulse"></div>
+                    <span class="text-[10px] font-black uppercase tracking-widest">Système Live</span>
+                </div>
+                <button onclick="openNotifications()" class="relative w-10 h-10 flex items-center justify-center text-slate-500 hover:bg-slate-50 rounded-xl transition-all">
+                    <i class="fa-solid fa-bell"></i>
+                    <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 border-2 border-white rounded-full"></span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div id="contentArea" class="p-10 space-y-10 custom-scrollbar overflow-y-auto">
+            <!-- Content will be injected here -->
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <div id="modalOverlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] hidden items-center justify-center p-6">
+        <div id="modalContent" class="bg-white rounded-[2.5rem] w-full max-w-xl shadow-2xl overflow-hidden scale-95 opacity-0 transition-all duration-300">
+            <!-- Modal HTML injected here -->
+        </div>
+    </div>
+
+    <script src="api.js"></script>
+    <script>
+        // State
+        let currentSection = 'overview';
+        let stats = {};
+        let activity = [];
+        let users = [];
+        let orders = [];
+
+        // --- Core Navigation ---
+        function showSection(id) {
+            currentSection = id;
+            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+            document.getElementById(`nav-${id}`).classList.add('active');
+            
+            const titles = {
+                overview: 'Tableau de Bord',
+                patients: 'Gestion Patients',
+                livreurs: 'Gestion Livreurs',
+                medecins: 'Gestion Médecins',
+                orders: 'Gestion Commandes',
+                services: 'Services & Tarifs',
+                logs: 'Journal d\'Activité'
+            };
+            document.getElementById('sectionTitle').innerText = titles[id];
+            
+            renderContent();
+            refreshData();
+        }
+
+        async function refreshData() {
+            try {
+                if (currentSection === 'overview') {
+                    stats = await getAdminStats();
+                    renderOverview();
+                } else if (['patients', 'livreurs', 'medecins'].includes(currentSection)) {
+                    const role = currentSection === 'patients' ? 'patient' : (currentSection === 'livreurs' ? 'livreur' : 'medecin');
+                    users = await getAdminUsers(role);
+                    renderUserTable();
+                } else if (currentSection === 'orders') {
+                    orders = await getReservations('admin', 0);
+                    renderOrderTable();
+                } else if (currentSection === 'logs') {
+                    activity = await getAdminActivity();
+                    renderLogs();
+                }
+            } catch (err) {
+                console.error('Refresh error:', err);
+                document.getElementById('contentArea').innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-20 text-center">
+                        <div class="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center text-3xl mb-6">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Erreur de chargement</h3>
+                        <p class="text-slate-500 max-w-sm mb-8">${err.message || 'Une erreur inattendue est survenue.'}</p>
+                        <button onclick="refreshData()" class="px-8 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all">Réessayer</button>
+                    </div>
+                `;
+            }
+        }
+
+        function renderContent() {
+            const area = document.getElementById('contentArea');
+            area.innerHTML = '<div class="flex items-center justify-center py-20"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-medical-600"></i></div>';
+            
+            if (currentSection === 'overview') renderOverview();
+            if (currentSection === 'services') renderServices();
+        }
+
+        function renderServices() {
+            const area = document.getElementById('contentArea');
+            area.innerHTML = `
+                <div class="mb-10">
+                    <h2 class="text-3xl font-black text-slate-900 tracking-tighter">Services & Tarifs</h2>
+                    <p class="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Catalogue des prestations disponibles</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    ${renderServiceCard('Transport Analyses', '45 DH', 'fa-vial', 'blue', 'Transport sécurisé des échantillons du domicile vers le laboratoire.')}
+                    ${renderServiceCard('Résultats à Domicile', '30 DH', 'fa-file-medical', 'green', 'Récupération et livraison des résultats d\'analyses à votre porte.')}
+                    ${renderServiceCard('Accompagnement', '80 DH', 'fa-user-doctor', 'purple', 'Présence physique d\'un agent pour vos rendez-vous médicaux.')}
+                </div>
+            `;
+        }
+
+        function renderServiceCard(title, price, icon, color, desc) {
+            return `
+                <div class="glass-card p-8 rounded-[2.5rem] transition-all hover:scale-[1.02]">
+                    <div class="w-14 h-14 bg-${color}-500/10 text-${color}-600 rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-inner">
+                        <i class="fa-solid ${icon}"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">${title}</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-6">${desc}</p>
+                    <div class="pt-6 border-t border-slate-100 flex justify-between items-center">
+                        <span class="text-2xl font-black text-slate-900">${price}</span>
+                        <button class="text-medical-600 font-bold text-xs uppercase tracking-widest hover:underline">Modifier</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- Overview Renderer ---
+        function renderOverview() {
+            const area = document.getElementById('contentArea');
+            if (!stats.totalUsers) { return; }
+
+            area.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-[fadeIn_0.5s_ease-out]">
+                    ${renderKPI('Utilisateurs', stats.totalUsers, 'fa-users', 'blue', '+12%', 'ce mois')}
+                    ${renderKPI('Commandes', stats.totalOrders, 'fa-box', 'green', '+5%', 'aujourd\'hui')}
+                    ${renderKPI('Revenus', stats.revenue + ' DH', 'fa-wallet', 'amber', '+8%', 'estimation')}
+                    ${renderKPI('Missions Actives', stats.activeOrders, 'fa-route', 'purple', 'Live', 'en temps réel')}
+                </div>
+
+                <div class="grid lg:grid-cols-3 gap-8 mt-10">
+                    <div class="lg:col-span-2 glass-card rounded-[2.5rem] p-8">
+                        <h3 class="text-xl font-bold text-slate-900 mb-8">Activité Temps Réel</h3>
+                        <div class="space-y-6 overflow-y-auto max-h-[400px] custom-scrollbar" id="activityFeed">
+                            <!-- Injected by log polling -->
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-[2.5rem] p-8">
+                        <h3 class="text-xl font-bold text-slate-900 mb-6">Répartition des Services</h3>
+                        <div class="w-64 mx-auto">
+                            <canvas id="serviceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid lg:grid-cols-1 gap-8 mt-10">
+                    <div class="glass-card rounded-[2.5rem] p-8">
+                        <h3 class="text-xl font-bold text-slate-900 mb-6">Nouveaux Inscrits</h3>
+                        <div id="newUsersMini" class="space-y-4">
+                            <!-- Mini user list -->
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            initCharts();
+            updateActivityFeed();
+        }
+
+        function renderKPI(label, val, icon, color, trend, trendLabel) {
+            return `
+                <div class="glass-card kpi-card p-6 rounded-3xl transition-all duration-300">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-${color}-500/10 text-${color}-600 rounded-2xl flex items-center justify-center text-xl shadow-inner">
+                            <i class="fa-solid ${icon}"></i>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] font-black px-2 py-1 bg-green-500/10 text-green-600 rounded-full uppercase tracking-widest">${trend}</span>
+                        </div>
+                    </div>
+                    <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">${label}</p>
+                    <div class="flex items-baseline gap-2">
+                        <h4 class="text-2xl font-black text-slate-900">${val}</h4>
+                        <span class="text-[10px] font-medium text-slate-400">${trendLabel}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- Charts ---
+        let serviceChart;
+        function initCharts() {
+            if (serviceChart) serviceChart.destroy();
+            const sCtx = document.getElementById('serviceChart').getContext('2d');
+            serviceChart = new Chart(sCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Transport', 'Livraison', 'Accomp.'],
+                    datasets: [{
+                        data: [stats.statsService?.A || 0, stats.statsService?.B || 0, stats.statsService?.C || 0],
+                        backgroundColor: ['#2563eb', '#10b981', '#0f172a'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { plugins: { legend: { position: 'bottom' } }, cutout: '70%' }
+            });
+        }
+
+        // --- Activity Feed ---
+        async function updateActivityFeed() {
+            const feed = document.getElementById('activityFeed');
+            if (!feed) return;
+            const data = await getAdminActivity();
+            feed.innerHTML = data.map(item => `
+                <div class="flex gap-4 items-start animate-[fadeIn_0.5s_ease-out]">
+                    <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 shrink-0">
+                        <i class="fa-solid ${item.type === 'ORDER' ? 'fa-box' : 'fa-user'}"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-bold text-slate-800">${item.title}</p>
+                        <p class="text-[10px] text-slate-400 font-medium">${item.user} • ${item.time}</p>
+                    </div>
+                    <span class="text-[8px] font-black px-2 py-1 bg-slate-100 text-slate-400 rounded-full uppercase">${item.status}</span>
+                </div>
+            `).join('');
+        }
+
+        // --- User Management Renderer ---
+        function renderUserTable() {
+            if (!users) users = [];
+            const area = document.getElementById('contentArea');
+            const roleName = currentSection === 'patients' ? 'Patients' : (currentSection === 'livreurs' ? 'Livreurs' : 'Médecins');
+            const isMedecin = currentSection === 'medecins';
+            
+            area.innerHTML = `
+                <div class="flex justify-between items-center mb-10">
+                    <div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tighter">Répertoire des ${roleName}</h2>
+                        <p class="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Gestion complète des comptes</p>
+                    </div>
+                    ${currentSection !== 'patients' ? `<button onclick="showAddUserModal()" class="bg-slate-900 text-white px-8 py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 flex items-center gap-3">
+                        <i class="fa-solid fa-plus"></i> Ajouter un ${currentSection === 'livreurs' ? 'Livreur' : 'Médecin'}
+                    </button>` : ''}
+                </div>
+
+                <div class="glass-card rounded-[2.5rem] overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-slate-50/50 border-b border-slate-100">
+                                <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Utilisateur</th>
+                                ${isMedecin ? '<th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Spécialité</th>' : ''}
+                                <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact</th>
+                                <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Statut</th>
+                                <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTableBody">
+                            ${users.map(u => `
+                                <tr class="border-b border-slate-50 hover:bg-slate-50/30 transition-colors">
+                                    <td class="px-8 py-6">
+                                        <div class="flex items-center gap-4">
+                                            <div class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center font-bold text-slate-400">
+                                                ${(u.name || u.email || '?').charAt(0).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <p class="font-bold text-slate-900">${u.name || 'Sans nom'}</p>
+                                                <p class="text-[10px] text-slate-400 font-medium">ID: #USR-${u.id}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    ${isMedecin ? `
+                                    <td class="px-8 py-6">
+                                        <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-bold uppercase tracking-wider">${u.specialite || 'Généraliste'}</span>
+                                    </td>` : ''}
+                                    <td class="px-8 py-6">
+                                        <p class="text-sm font-medium text-slate-600">${u.email}</p>
+                                        <p class="text-[10px] text-slate-400 font-bold">${u.telephone || u.dateJoined}</p>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <span class="px-3 py-1 bg-green-500/10 text-green-600 text-[10px] font-black rounded-full uppercase">${u.status}</span>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <div class="flex gap-2">
+                                            <button onclick="handleEditUser(${u.id})" class="w-10 h-10 bg-slate-50 text-slate-400 rounded-xl hover:bg-medical-600 hover:text-white transition-all"><i class="fa-solid fa-pen-to-square"></i></button>
+                                            <button onclick="handleDeleteUser(${u.id}, '${u.name}')" class="w-10 h-10 bg-slate-50 text-slate-400 rounded-xl hover:bg-red-500 hover:text-white transition-all"><i class="fa-solid fa-trash"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        // --- Order Management Renderer ---
+        function renderOrderTable() {
+            if (!orders) orders = [];
+            const area = document.getElementById('contentArea');
+            area.innerHTML = `
+                <div class="mb-10">
+                    <h2 class="text-3xl font-black text-slate-900 tracking-tighter">Journal des Missions</h2>
+                    <p class="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Surveillance temps réel des flux</p>
+                </div>
+
+                <div class="glass-card rounded-[2.5rem] overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-slate-50/50 border-b border-slate-100">
+                                <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">ID / Service</th>
+                                <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Patient</th>
+                                <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Statut</th>
+                                <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Livreur</th>
+                                <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${orders.map(o => `
+                                <tr class="border-b border-slate-50 hover:bg-slate-50/30 transition-colors">
+                                    <td class="px-8 py-6">
+                                        <p class="font-bold text-slate-900">#PKG-${o.id}</p>
+                                        <p class="text-[10px] text-medical-600 font-bold">${o.service_name}</p>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <p class="text-sm font-bold text-slate-700">${o.patient_name || 'Patient'}</p>
+                                        <p class="text-[10px] text-slate-400">${o.address}</p>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <span class="px-4 py-1 rounded-full text-[10px] font-black uppercase status-${o.status.toLowerCase()}">${o.status}</span>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <p class="text-sm font-medium text-slate-600">${o.livreur_name || 'Non assigné'}</p>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <button class="text-medical-600 font-bold text-xs hover:underline">Gérer</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        // --- Modals ---
+        function showAddUserModal() {
+            const overlay = document.getElementById('modalOverlay');
+            const content = document.getElementById('modalContent');
+            const type = currentSection === 'livreurs' ? 'Livreur' : 'Médecin';
+
+            content.innerHTML = `
+                <div class="p-10">
+                    <div class="flex justify-between items-center mb-8">
+                        <h3 class="text-2xl font-black text-slate-900">Nouveau ${type}</h3>
+                        <button onclick="closeModal()" class="w-10 h-10 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center hover:bg-slate-100"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+
+                    <form id="addUserForm" class="space-y-6">
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-xs font-black text-slate-400 uppercase tracking-widest">Nom complet</label>
+                                <input type="text" id="addNom" class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm" required>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-xs font-black text-slate-400 uppercase tracking-widest">Email</label>
+                                <input type="email" id="addEmail" class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm" required>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-xs font-black text-slate-400 uppercase tracking-widest">Spécialité / Zone</label>
+                            <input type="text" id="addSpec" class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm" required>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-xs font-black text-slate-400 uppercase tracking-widest">Mot de passe provisoire</label>
+                            <input type="password" id="addPass" class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm" required>
+                        </div>
+                        <div class="pt-6">
+                            <button type="submit" class="w-full py-4 bg-medical-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-medical-600/20 hover:bg-medical-700 transition-all">Créer le compte</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+
+            document.getElementById('addUserForm').onsubmit = handleAddUser;
+        }
+
+        async function handleAddUser(e) {
+            e.preventDefault();
+            const data = {
+                nom: document.getElementById('addNom').value,
+                email: document.getElementById('addEmail').value,
+                password: document.getElementById('addPass').value,
+                role: currentSection === 'livreurs' ? 'livreur' : 'medecin'
+            };
+
+            try {
+                const res = await register(data);
+                if (res.success) {
+                    alert('Compte créé avec succès !');
+                    closeModal();
+                    refreshData();
+                }
+            } catch (err) {
+                alert('Erreur lors de la création');
+            }
+        }
+
+        function closeModal() {
+            const overlay = document.getElementById('modalOverlay');
+            const content = document.getElementById('modalContent');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+            }, 300);
+        }
+
+        // --- Actions ---
+        async function handleDeleteUser(id, name) {
+            if (confirm(`Êtes-vous sûr de vouloir supprimer l'utilisateur ${name} ?`)) {
+                try {
+                    await deleteUser(id);
+                    refreshData();
+                } catch (err) {
+                    alert('Erreur lors de la suppression');
+                }
+            }
+        }
+
+        function handleEditUser(id) {
+            const u = users.find(x => x.id === id);
+            if (!u) return;
+            
+            const overlay = document.getElementById('modalOverlay');
+            const content = document.getElementById('modalContent');
+
+            content.innerHTML = `
+                <div class="p-10">
+                    <div class="flex justify-between items-center mb-8">
+                        <h3 class="text-2xl font-black text-slate-900">Modifier Utilisateur</h3>
+                        <button onclick="closeModal()" class="w-10 h-10 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center hover:bg-slate-100"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+
+                    <form id="editUserForm" class="space-y-6">
+                        <div class="space-y-2">
+                            <label class="text-xs font-black text-slate-400 uppercase tracking-widest">Nom Complet</label>
+                            <input type="text" id="editNom" value="${u.name}" class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm" required>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-xs font-black text-slate-400 uppercase tracking-widest">Email</label>
+                            <input type="email" id="editEmail" value="${u.email}" class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm" required>
+                        </div>
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-xs font-black text-slate-400 uppercase tracking-widest">Téléphone</label>
+                                <input type="text" id="editTel" value="${u.telephone || ''}" class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-xs font-black text-slate-400 uppercase tracking-widest">Spécialité</label>
+                                <input type="text" id="editSpec" value="${u.specialite || ''}" class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm">
+                            </div>
+                        </div>
+                        <div class="pt-6">
+                            <button type="submit" class="w-full py-4 bg-medical-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-medical-600/20 hover:bg-medical-700 transition-all">Enregistrer les modifications</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+
+            document.getElementById('editUserForm').onsubmit = async (e) => {
+                e.preventDefault();
+                const data = {
+                    first_name: document.getElementById('editNom').value,
+                    email: document.getElementById('editEmail').value,
+                    telephone: document.getElementById('editTel').value,
+                    specialite: document.getElementById('editSpec').value
+                };
+                try {
+                    await updateUserAdmin(id, data);
+                    alert('Utilisateur mis à jour !');
+                    closeModal();
+                    refreshData();
+                } catch (err) {
+                    alert('Erreur lors de la mise à jour');
+                }
+            };
+        }
+
+        function openNotifications() {
+            alert('Notifications: ' + (activity.length > 0 ? `${activity.length} nouveaux événements` : 'Aucune nouvelle notification'));
+        }
+
+        function openSettings() {
+            alert('Paramètres du compte administrateur bientôt disponibles.');
+        }
+
+        function logout() {
+            localStorage.removeItem('mediLogUser');
+            window.location.href = 'login.html';
+        }
+
+        // --- Initialize ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = JSON.parse(localStorage.getItem('mediLogUser'));
+            if (user) document.getElementById('adminName').innerText = user.name || 'Admin';
+            
+            showSection('overview');
+
+            // Live Polling
+            setInterval(() => {
+                if (currentSection === 'overview') {
+                    refreshData();
+                    updateActivityFeed();
+                }
+            }, 5000);
+        });
+    </script>
+</body>
+</html>
