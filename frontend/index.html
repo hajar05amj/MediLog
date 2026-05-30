@@ -767,34 +767,33 @@
     <!-- QR Code Library -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script>
-        // Generate QR Code with REAL server IP (bypass cache)
+        // Generate QR Code
         (async function() {
             let appUrl = '';
+            const host = window.location.hostname;
             
-            try {
-                // Force bypass any cache (including Service Worker)
-                const res = await fetch('/server-ip/?t=' + Date.now(), { 
-                    cache: 'no-store',
-                    headers: { 'Cache-Control': 'no-cache' }
-                });
-                const data = await res.json();
-                console.log('Server IP response:', data);
-                if (data.ip && data.ip !== '127.0.0.1') {
-                    appUrl = 'http://' + data.ip + ':' + data.port + '/';
+            // If on a public server (pythonanywhere, render, etc.), use the public URL directly
+            if (host.includes('pythonanywhere.com') || host.includes('onrender.com') || host.includes('.com')) {
+                appUrl = window.location.protocol + '//' + window.location.host + '/';
+            } else {
+                // Local development: try to get server IP
+                try {
+                    const res = await fetch('/server-ip/?t=' + Date.now(), { 
+                        cache: 'no-store',
+                        headers: { 'Cache-Control': 'no-cache' }
+                    });
+                    const data = await res.json();
+                    console.log('Server IP response:', data);
+                    if (data.ip && data.ip !== '127.0.0.1') {
+                        appUrl = 'http://' + data.ip + ':' + data.port + '/';
+                    }
+                } catch(e) {
+                    console.error('Failed to fetch server IP:', e);
                 }
-            } catch(e) {
-                console.error('Failed to fetch server IP:', e);
-            }
-            
-            // Fallback: if API failed, use current host but warn
-            if (!appUrl) {
-                const host = window.location.hostname;
-                const port = window.location.port || '8000';
-                if (host === 'localhost' || host === '127.0.0.1') {
-                    // On localhost, try common private IPs pattern
+                
+                if (!appUrl) {
+                    const port = window.location.port || '8000';
                     appUrl = 'http://192.168.11.102:' + port + '/';
-                } else {
-                    appUrl = window.location.protocol + '//' + window.location.host + '/';
                 }
             }
             
