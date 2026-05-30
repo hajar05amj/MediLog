@@ -88,12 +88,28 @@
         .status-attente { background: #fee2e2; color: #991b1b; }
         .status-cours { background: #fef3c7; color: #92400e; }
         .status-livre { background: #dcfce7; color: #166534; }
+
+        /* Mobile Sidebar Overlay */
+        .mobile-sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+        }
+        .mobile-sidebar-overlay.active {
+            display: block;
+        }
     </style>
 </head>
 <body class="flex min-h-screen">
 
+    <!-- Mobile Sidebar Overlay -->
+    <div class="mobile-sidebar-overlay lg:hidden" id="mobileSidebarOverlay" onclick="closeMobileSidebar()"></div>
+
     <!-- Sidebar -->
-    <aside class="w-72 bg-white border-r border-slate-100 flex flex-col sticky top-0 h-screen z-50">
+    <aside id="mainSidebar" class="w-72 bg-white border-r border-slate-100 flex flex-col fixed inset-y-0 left-0 z-[201] transform -translate-x-full lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out h-screen">
         <div class="p-8 mb-4">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-medical-600 rounded-xl flex items-center justify-center text-white shadow-lg">
@@ -151,10 +167,11 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 flex flex-col min-w-0">
+    <main class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         <!-- Navbar -->
-        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-slate-100 px-10 flex items-center justify-between sticky top-0 z-40">
-            <div class="flex items-center gap-8 flex-1">
+        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-slate-100 px-6 lg:px-10 flex items-center justify-between sticky top-0 z-40">
+            <div class="flex items-center gap-4 lg:gap-8 flex-1">
+                <button onclick="openMobileSidebar()" class="lg:hidden text-slate-600 text-xl w-10 h-10 flex items-center justify-center hover:bg-slate-100 rounded-xl transition-all"><i class="fa-solid fa-bars"></i></button>
                 <h2 class="text-xl font-bold text-slate-900" id="sectionTitle">Tableau de Bord</h2>
                 <div class="relative w-96 hidden md:block">
                     <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
@@ -197,7 +214,18 @@
         let orders = [];
 
         // --- Core Navigation ---
+        function openMobileSidebar() {
+            document.getElementById('mobileSidebarOverlay').classList.add('active');
+            document.getElementById('mainSidebar').classList.remove('-translate-x-full');
+        }
+
+        function closeMobileSidebar() {
+            document.getElementById('mobileSidebarOverlay').classList.remove('active');
+            document.getElementById('mainSidebar').classList.add('-translate-x-full');
+        }
+
         function showSection(id) {
+            if (window.innerWidth < 1024) closeMobileSidebar();
             currentSection = id;
             document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
             document.getElementById(`nav-${id}`).classList.add('active');
