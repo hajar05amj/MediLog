@@ -1588,22 +1588,36 @@
             }
         }
 
+        // Helper: extract a readable doctor name from user data
+        function getDoctorDisplayName(user) {
+            // 1. Use first_name / name if available
+            if (user.name && user.name.trim()) return user.name.trim();
+            if (user.first_name && user.first_name.trim()) return user.first_name.trim();
+            // 2. Extract from email: "ahmed.mansouri@gmail.com" → "Ahmed Mansouri"
+            if (user.email) {
+                const local = user.email.split('@')[0];
+                return local.split(/[._-]/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+            }
+            if (user.username) return user.username;
+            return 'Praticien';
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const user = JSON.parse(localStorage.getItem('mediLogUser'));
             if (user) {
                 window.currentUser = user;
+                const doctorName = getDoctorDisplayName(user);
                 const nameSpan = document.getElementById('doctor-name');
-                if (nameSpan) nameSpan.innerText = user.name || user.username || 'Praticien';
+                if (nameSpan) nameSpan.innerText = doctorName;
 
                 loadDoctorDashboard();
 
-                const userName = user.username || 'Médecin';
                 const navUserInfo = document.getElementById('navbar-user-info');
                 if (navUserInfo) {
                     navUserInfo.innerHTML = `
                         <div class="flex items-center gap-4 mb-6 p-4 bg-slate-50 rounded-2xl">
-                            <div class="w-12 h-12 hero-gradient text-white rounded-xl flex items-center justify-center font-black text-xl shadow-lg shadow-blue-200">${userName.substring(0, 2).toUpperCase()}</div>
-                            <div><p class="font-black text-slate-900 text-sm tracking-tight">${userName}</p><p class="text-[9px] text-slate-400 font-black uppercase tracking-widest">Praticien Certifié</p></div>
+                            <div class="w-12 h-12 hero-gradient text-white rounded-xl flex items-center justify-center font-black text-xl shadow-lg shadow-blue-200">${doctorName.substring(0, 2).toUpperCase()}</div>
+                            <div><p class="font-black text-slate-900 text-sm tracking-tight">${doctorName}</p><p class="text-[9px] text-slate-400 font-black uppercase tracking-widest">Praticien Certifié</p></div>
                         </div>
                         <button onclick="logout()" class="w-full py-3 text-red-500 font-bold text-sm hover:bg-red-50 rounded-xl transition-all flex items-center justify-center gap-2">
                             <i class="fa-solid fa-power-off"></i> Déconnexion
