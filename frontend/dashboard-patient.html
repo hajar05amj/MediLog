@@ -741,6 +741,18 @@
             }
         }
 
+        @keyframes slideDownBanner {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(100%);
+            }
+        }
+
         .app-download-banner .banner-inner {
             background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
             padding: 1.25rem 1.5rem;
@@ -1047,7 +1059,7 @@
                 <p class="banner-desc">Notifications en temps réel et suivi simplifié</p>
             </div>
             <div class="banner-actions">
-                <a href="/static/medilog.apk" download="MediLog_v1.0.apk" class="btn-install">INSTALLER</a>
+                <button onclick="installPWA()" class="btn-install">INSTALLER</button>
                 <button onclick="closeAppBanner()" class="btn-close-banner">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
@@ -2725,9 +2737,48 @@
 
         function closeBookingModal() { const modal = document.getElementById('bookingModal'); if (modal) modal.remove(); }
 
+        // ========== PWA INSTALL ==========
+        let deferredPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            console.log('PWA install prompt captured');
+            // Show the banner since PWA is installable
+            const banner = document.getElementById('appDownloadBanner');
+            if (banner && !localStorage.getItem('hideAppBanner') && window.innerWidth < 1024) {
+                banner.style.display = 'block';
+            }
+        });
+
+        window.addEventListener('appinstalled', () => {
+            console.log('MediLog PWA installed!');
+            deferredPrompt = null;
+            closeAppBanner();
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted PWA install');
+                        closeAppBanner();
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                // Fallback: show manual instructions
+                alert('Pour installer MediLog :\n\n📱 Android : Appuyez sur le menu (⋮) puis "Ajouter à l\'écran d\'accueil"\n\n🍎 iPhone : Appuyez sur le bouton Partager (⬆) puis "Sur l\'écran d\'accueil"');
+            }
+        }
+
         function closeAppBanner() {
             const banner = document.getElementById('appDownloadBanner');
-            if (banner) banner.style.display = 'none';
+            if (banner) {
+                banner.style.animation = 'slideDownBanner 0.4s ease-in forwards';
+                setTimeout(() => { banner.style.display = 'none'; }, 400);
+            }
             localStorage.setItem('hideAppBanner', 'true');
         }
 
