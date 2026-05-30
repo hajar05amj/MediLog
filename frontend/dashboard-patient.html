@@ -2746,7 +2746,7 @@
             console.log('PWA install prompt captured');
             // Show the banner since PWA is installable
             const banner = document.getElementById('appDownloadBanner');
-            if (banner && !localStorage.getItem('hideAppBanner') && window.innerWidth < 1024) {
+            if (banner && !sessionStorage.getItem('hideAppBanner') && window.innerWidth < 1024) {
                 banner.style.display = 'block';
             }
         });
@@ -2778,13 +2778,13 @@
             if (banner) {
                 banner.style.display = 'none';
             }
-            localStorage.setItem('hideAppBanner', 'true');
+            sessionStorage.setItem('hideAppBanner', 'true');
         }
 
         // --- Init & Start ---
         document.addEventListener('DOMContentLoaded', () => {
             const isMobile = window.innerWidth < 1024;
-            if (isMobile && !localStorage.getItem('hideAppBanner')) {
+            if (isMobile && !sessionStorage.getItem('hideAppBanner')) {
                 const banner = document.getElementById('appDownloadBanner');
                 if (banner) banner.style.display = 'block';
             }

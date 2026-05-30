@@ -1054,7 +1054,7 @@
             e.preventDefault();
             deferredPrompt = e;
             const banner = document.getElementById('appDownloadBanner');
-            if (banner && !localStorage.getItem('hideAppBanner') && window.innerWidth < 1024) {
+            if (banner && !sessionStorage.getItem('hideAppBanner') && window.innerWidth < 1024) {
                 banner.style.display = 'block';
             }
         });
@@ -1081,11 +1081,11 @@
             if (banner) {
                 banner.style.display = 'none';
             }
-            localStorage.setItem('hideAppBanner', 'true');
+            sessionStorage.setItem('hideAppBanner', 'true');
         }
 
         // Show banner on mobile after a short delay
-        if (window.innerWidth < 1024 && !localStorage.getItem('hideAppBanner')) {
+        if (window.innerWidth < 1024 && !sessionStorage.getItem('hideAppBanner')) {
             setTimeout(() => {
                 const banner = document.getElementById('appDownloadBanner');
                 if (banner) banner.style.display = 'block';
