@@ -1039,7 +1039,7 @@
                 <p class="banner-desc">Notifications en temps réel et suivi simplifié</p>
             </div>
             <div class="banner-actions">
-                <button onclick="installPWA()" class="btn-install">INSTALLER</button>
+                <a href="/static/medilog.apk" download="MediLog_v1.0.apk" class="btn-install" onclick="closeAppBanner()">INSTALLER</a>
                 <button onclick="closeAppBanner()" class="btn-close-banner">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
@@ -1048,35 +1048,6 @@
     </div>
 
     <script>
-        // ========== PWA INSTALL ==========
-        let deferredPrompt = null;
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            const banner = document.getElementById('appDownloadBanner');
-            if (banner && !sessionStorage.getItem('hideAppBanner') && window.innerWidth < 1024) {
-                banner.style.display = 'block';
-            }
-        });
-
-        window.addEventListener('appinstalled', () => {
-            deferredPrompt = null;
-            closeAppBanner();
-        });
-
-        function installPWA() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((result) => {
-                    if (result.outcome === 'accepted') closeAppBanner();
-                    deferredPrompt = null;
-                });
-            } else {
-                alert('Pour installer MediLog :\n\n📱 Android : Menu (⋮) → "Ajouter à l\'écran d\'accueil"\n\n🍎 iPhone : Bouton Partager (⬆) → "Sur l\'écran d\'accueil"');
-            }
-        }
-
         function closeAppBanner() {
             const banner = document.getElementById('appDownloadBanner');
             if (banner) {

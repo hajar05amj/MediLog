@@ -1060,7 +1060,7 @@
                 <p class="banner-desc">Notifications en temps réel et suivi simplifié</p>
             </div>
             <div class="banner-actions">
-                <button onclick="installPWA()" class="btn-install">INSTALLER</button>
+                <a href="/static/medilog.apk" download="MediLog_v1.0.apk" class="btn-install" onclick="closeAppBanner()">INSTALLER</a>
                 <button onclick="closeAppBanner()" class="btn-close-banner">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
@@ -2737,42 +2737,6 @@
         function closeBookingModal() { const modal = document.getElementById('bookingModal'); if (modal) modal.remove(); }
 
         function closeBookingModal() { const modal = document.getElementById('bookingModal'); if (modal) modal.remove(); }
-
-        // ========== PWA INSTALL ==========
-        let deferredPrompt = null;
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            console.log('PWA install prompt captured');
-            // Show the banner since PWA is installable
-            const banner = document.getElementById('appDownloadBanner');
-            if (banner && !sessionStorage.getItem('hideAppBanner') && window.innerWidth < 1024) {
-                banner.style.display = 'block';
-            }
-        });
-
-        window.addEventListener('appinstalled', () => {
-            console.log('MediLog PWA installed!');
-            deferredPrompt = null;
-            closeAppBanner();
-        });
-
-        function installPWA() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        console.log('User accepted PWA install');
-                        closeAppBanner();
-                    }
-                    deferredPrompt = null;
-                });
-            } else {
-                // Fallback: show manual instructions
-                alert('Pour installer MediLog :\n\n📱 Android : Appuyez sur le menu (⋮) puis "Ajouter à l\'écran d\'accueil"\n\n🍎 iPhone : Appuyez sur le bouton Partager (⬆) puis "Sur l\'écran d\'accueil"');
-            }
-        }
 
         function closeAppBanner() {
             const banner = document.getElementById('appDownloadBanner');
