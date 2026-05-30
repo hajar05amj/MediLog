@@ -82,6 +82,21 @@ class SeedView(APIView):
         u_hajar.save()
         UserProfile.objects.create(user=u_hajar, role='patient', pack_type='senior')
         
+        u_hanane = User.objects.create_user(username='hanane@gmail.com', email='hanane@gmail.com', first_name='hanane', last_name='wassid')
+        u_hanane.set_password('123')
+        u_hanane.save()
+        UserProfile.objects.create(user=u_hanane, role='patient', pack_type='junior')
+
+        u_chaimaa = User.objects.create_user(username='najdi@gmail.com', email='najdi@gmail.com', first_name='chaimaa', last_name='Najdi')
+        u_chaimaa.set_password('123')
+        u_chaimaa.save()
+        UserProfile.objects.create(user=u_chaimaa, role='patient', pack_type='junior')
+
+        u_ana = User.objects.create_user(username='ana@gmail.com', email='ana@gmail.com', first_name='ana', last_name='ana')
+        u_ana.set_password('123')
+        u_ana.save()
+        UserProfile.objects.create(user=u_ana, role='patient', pack_type='junior')
+        
         Token.objects.get_or_create(user=u1)
         Token.objects.get_or_create(user=u2)
         Token.objects.get_or_create(user=u3)
