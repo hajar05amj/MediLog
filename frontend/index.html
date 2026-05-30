@@ -898,7 +898,7 @@
                 e.preventDefault();
                 document.querySelector(this.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
             });
-        });
+        });\n
 
         // Booking Flow Logic
         function handleSelection(id, name, price) {
@@ -918,6 +918,179 @@
                 
                 window.location.href = 'login.html' + packParam;
             }
+        }
+    </script>
+
+    <!-- Mobile App Download Banner -->
+    <style>
+        .app-download-banner {
+            display: none;
+            position: fixed;
+            bottom: 1rem;
+            left: 1rem;
+            right: 1rem;
+            z-index: 9999;
+            border-radius: 1.75rem;
+            overflow: hidden;
+            animation: slideUpBanner 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            box-shadow: 0 20px 60px -15px rgba(37, 99, 235, 0.35);
+        }
+
+        @keyframes slideUpBanner {
+            from { opacity: 0; transform: translateY(100%); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideDownBanner {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(100%); }
+        }
+
+        .app-download-banner .banner-inner {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-download-banner .banner-inner::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .app-download-banner .banner-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+            box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.5);
+        }
+
+        .app-download-banner .banner-content { flex: 1; min-width: 0; }
+        .app-download-banner .banner-title { color: white; font-weight: 800; font-size: 0.85rem; margin-bottom: 0.15rem; }
+        .app-download-banner .banner-desc { color: rgba(255, 255, 255, 0.6); font-size: 0.65rem; font-weight: 600; }
+        .app-download-banner .banner-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+
+        .app-download-banner .btn-install {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.75rem;
+            font-size: 0.7rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+
+        .app-download-banner .btn-install:active { transform: scale(0.95); }
+
+        .app-download-banner .btn-close-banner {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .app-download-banner .btn-close-banner:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        @media (min-width: 1024px) {
+            .app-download-banner { display: none !important; }
+        }
+    </style>
+
+    <div id="appDownloadBanner" class="app-download-banner">
+        <div class="banner-inner">
+            <div class="banner-icon">
+                <i class="fa-solid fa-mobile-screen"></i>
+            </div>
+            <div class="banner-content">
+                <h4 class="banner-title">Téléchargez MediLog</h4>
+                <p class="banner-desc">Notifications en temps réel et suivi simplifié</p>
+            </div>
+            <div class="banner-actions">
+                <button onclick="installPWA()" class="btn-install">INSTALLER</button>
+                <button onclick="closeAppBanner()" class="btn-close-banner">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== PWA INSTALL ==========
+        let deferredPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const banner = document.getElementById('appDownloadBanner');
+            if (banner && !localStorage.getItem('hideAppBanner') && window.innerWidth < 1024) {
+                banner.style.display = 'block';
+            }
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredPrompt = null;
+            closeAppBanner();
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((result) => {
+                    if (result.outcome === 'accepted') closeAppBanner();
+                    deferredPrompt = null;
+                });
+            } else {
+                alert('Pour installer MediLog :\n\n📱 Android : Menu (⋮) → "Ajouter à l\'écran d\'accueil"\n\n🍎 iPhone : Bouton Partager (⬆) → "Sur l\'écran d\'accueil"');
+            }
+        }
+
+        function closeAppBanner() {
+            const banner = document.getElementById('appDownloadBanner');
+            if (banner) {
+                banner.style.animation = 'slideDownBanner 0.4s ease-in forwards';
+                setTimeout(() => { banner.style.display = 'none'; }, 400);
+            }
+            localStorage.setItem('hideAppBanner', 'true');
+        }
+
+        // Show banner on mobile after a short delay
+        if (window.innerWidth < 1024 && !localStorage.getItem('hideAppBanner')) {
+            setTimeout(() => {
+                const banner = document.getElementById('appDownloadBanner');
+                if (banner) banner.style.display = 'block';
+            }, 2000);
         }
     </script>
 </body>
