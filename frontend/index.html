@@ -1079,8 +1079,7 @@
         function closeAppBanner() {
             const banner = document.getElementById('appDownloadBanner');
             if (banner) {
-                banner.style.animation = 'slideDownBanner 0.4s ease-in forwards';
-                setTimeout(() => { banner.style.display = 'none'; }, 400);
+                banner.style.display = 'none';
             }
             localStorage.setItem('hideAppBanner', 'true');
         }
