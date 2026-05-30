@@ -1755,7 +1755,7 @@
                     <div class="space-y-6">
                         <h3 class="text-xs font-black text-slate-400 uppercase tracking-[0.3em] mb-6">Ordonnances & Documents</h3>
                         <div class="grid md:grid-cols-2 gap-6">
-                            ${ordonnances.map(o => {
+                                ${ordonnances.length > 0 ? ordonnances.map(o => {
                 const cacheId = `ord_${o.id}`;
                 window.prescriptionsCache = window.prescriptionsCache || {};
                 window.prescriptionsCache[cacheId] = o.contenu || '';
@@ -1784,7 +1784,44 @@
                                         </div>
                                     </div>
                                 `;
-            }).join('')}
+            }).join('') : `
+                                    <div class="col-span-2 text-center py-10 bg-white border-2 border-slate-50 rounded-3xl">
+                                        <div class="w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                                            <i class="fa-solid fa-folder-open"></i>
+                                        </div>
+                                        <p class="text-slate-500 font-bold">Aucune ordonnance disponible pour le moment.</p>
+                                    </div>
+                            `}
+                        </div>
+                    </div>
+
+                    <!-- Analyses Section (Added to fix missing results) -->
+                    <div class="space-y-6 pt-6">
+                        <h3 class="text-xs font-black text-slate-400 uppercase tracking-[0.3em] mb-6">Résultats d'Analyses</h3>
+                        <div class="bg-white border-2 border-slate-50 rounded-3xl p-8 shadow-sm">
+                            ${results && results.length > 0 ? `
+                                <div class="space-y-4">
+                                    ${results.map(r => `
+                                        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-2 h-2 bg-medical-500 rounded-full"></div>
+                                                <div>
+                                                    <p class="text-sm font-bold text-slate-900">${r.name || 'Analyse'}</p>
+                                                    <p class="text-xs text-slate-400 font-bold">${r.date || 'Récent'}</p>
+                                                </div>
+                                            </div>
+                                            <button class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:text-medical-600 hover:border-medical-600 transition-all">Voir détails</button>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : `
+                                <div class="text-center py-8">
+                                    <div class="w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                                        <i class="fa-solid fa-vial-circle-check"></i>
+                                    </div>
+                                    <p class="text-slate-500 font-bold">Aucun résultat d'analyse disponible pour le moment.</p>
+                                </div>
+                            `}
                         </div>
                     </div>
 
