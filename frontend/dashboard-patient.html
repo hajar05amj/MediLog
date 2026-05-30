@@ -1036,6 +1036,25 @@
         </div>
     </main>
 
+    <!-- Mobile App Download Banner -->
+    <div id="appDownloadBanner" class="app-download-banner lg:hidden">
+        <div class="banner-inner">
+            <div class="banner-icon">
+                <i class="fa-solid fa-mobile-screen"></i>
+            </div>
+            <div class="banner-content">
+                <h4 class="banner-title">Téléchargez MediLog</h4>
+                <p class="banner-desc">Notifications en temps réel et suivi simplifié</p>
+            </div>
+            <div class="banner-actions">
+                <a href="/static/medilog.apk" download="MediLog_v1.0.apk" class="btn-install">INSTALLER</a>
+                <button onclick="closeAppBanner()" class="btn-close-banner">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Mobile Bottom Navigation -->
     <nav class="mobile-bottom-nav no-print" id="mobileBottomNav">
         <div class="nav-items">
@@ -2706,8 +2725,20 @@
 
         function closeBookingModal() { const modal = document.getElementById('bookingModal'); if (modal) modal.remove(); }
 
+        function closeAppBanner() {
+            const banner = document.getElementById('appDownloadBanner');
+            if (banner) banner.style.display = 'none';
+            localStorage.setItem('hideAppBanner', 'true');
+        }
+
         // --- Init & Start ---
         document.addEventListener('DOMContentLoaded', () => {
+            const isMobile = window.innerWidth < 1024;
+            if (isMobile && !localStorage.getItem('hideAppBanner')) {
+                const banner = document.getElementById('appDownloadBanner');
+                if (banner) banner.style.display = 'block';
+            }
+
             const userName = window.currentUser.name || window.currentUser.first_name || 'Patient';
             document.getElementById('userName').innerText = userName;
             document.getElementById('userFullName').innerText = userName;
