@@ -5,3 +5,5 @@ whitenoise==6.9.0
 sqlparse==0.5.5
 asgiref==3.11.1
 pillow==10.3.0
+dj-database-url==2.1.0
+psycopg2-binary==2.9.9
